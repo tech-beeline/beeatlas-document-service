@@ -6,6 +6,9 @@ env:
   SPRING_DATASOURCE_PASSWORD: "vault:eafdmmart/data/test/func/fdm#password"
   AWS_S3_ACCESS_KEY: "vault:eafdmmart/data/test/func/fdm#documentsS3ApiKey"
   AWS_S3_SECRET_KEY: "vault:eafdmmart/data/test/func/fdm#documentsS3Secret"
+  AWS_S3_REGION: "https://yd-s3test-ceph04-hl.vimpelcom.ru"
+  AWS_S3_ENDPOINT: "https://yd-s3test-ceph04-hl.vimpelcom.ru"
+  AWS_S3.BUCKET_NAME: "arch-code-documents-dev"
 
 ingress:
   annotations:
