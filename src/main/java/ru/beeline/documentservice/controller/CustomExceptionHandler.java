@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.beeline.documentservice.exception.ForbiddenException;
 import ru.beeline.documentservice.exception.NotFoundException;
 import ru.beeline.documentservice.exception.S3Exception;
+import ru.beeline.documentservice.exception.ValidationException;
 
 
 @ControllerAdvice
 @Slf4j
 public class CustomExceptionHandler {
+
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<Object> handleException(ForbiddenException e) {
         log.error(e.getMessage());
@@ -37,6 +39,15 @@ public class CustomExceptionHandler {
         log.error(e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header("content-type", MediaType.APPLICATION_JSON_VALUE)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Object> handleException(ValidationException e) {
+        log.error(e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .header("content-type", MediaType.APPLICATION_JSON_VALUE)
                 .body(e.getMessage());
     }
