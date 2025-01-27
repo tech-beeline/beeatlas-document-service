@@ -12,10 +12,8 @@ import java.util.stream.Collectors;
 
 import static ru.beeline.documentservice.utils.Constants.*;
 
-
 public class HeaderInterceptor implements HandlerInterceptor {
     private Logger logger = LoggerFactory.getLogger(HeaderInterceptor.class);
-
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
