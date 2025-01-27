@@ -12,9 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CamundaVariableDTO {
 
-    @JsonProperty("value")
     private Object value;
 
-    @JsonProperty("type")
     private String type;
 }

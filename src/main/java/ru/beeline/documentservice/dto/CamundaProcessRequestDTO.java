@@ -14,9 +14,7 @@ import java.util.Map;
 @Builder
 public class CamundaProcessRequestDTO {
 
-    @JsonProperty("variables")
     private Map<String, CamundaVariableDTO> variables;
 
-    @JsonProperty("businessKey")
     private Integer businessKey;
 }
