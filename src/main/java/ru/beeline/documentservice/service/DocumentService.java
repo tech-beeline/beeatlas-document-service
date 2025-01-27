@@ -109,7 +109,7 @@ public class DocumentService {
                                                  Integer userId, String entityType, HttpServletRequest request) {
         validateRequest(request, userRoles);
         String fileName = removePrefix(request.getHeader("Content-Disposition"), "filename=");
-        if (fileName.isEmpty()){
+        if (fileName.isEmpty()) {
             throw new ValidationException("Отсутствует имя файла в заголовке Content-Disposition, filename");
         }
         uploadFile(fileName, file);
@@ -158,7 +158,7 @@ public class DocumentService {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(fileName)
+                            .object("/import/" + fileName)
                             .stream(inputStream, file.getSize(), -1)
                             .contentType(file.getContentType())
                             .build());
