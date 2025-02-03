@@ -34,7 +34,6 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@Transactional
 public class DocumentService {
 
     @Autowired
@@ -162,9 +161,9 @@ public class DocumentService {
                             .stream(inputStream, file.getSize(), -1)
                             .contentType(file.getContentType())
                             .build());
-            log.info("File uploaded successfully: " + fileName);
+            log.info("Файл успешно загружен: " + fileName);
         } catch (Exception e) {
-            log.error("File upload failed: " + e.getMessage());
+            log.error("Не удалось загрузить файл: " + e.getMessage());
         }
     }
 }
