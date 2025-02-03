@@ -157,7 +157,7 @@ public class DocumentService {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object("/import/" + fileName)
+                            .object("import/" + fileName)
                             .stream(inputStream, file.getSize(), -1)
                             .contentType(file.getContentType())
                             .build());
