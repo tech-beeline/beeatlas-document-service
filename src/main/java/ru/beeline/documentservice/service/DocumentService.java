@@ -140,7 +140,7 @@ public class DocumentService {
     private Integer saveDocumentInfo(String fileName, Integer userId) {
         S3Document document = new S3Document();
         document.setDocType("excel");
-        document.setKey("import/" + fileName);
+        document.setKey("/import/" + fileName);
         document.setSourceType("USER");
         document.setSourceId(userId);
         document.setIsPublic(true);
