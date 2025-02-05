@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MultipartException;
 import ru.beeline.documentservice.exception.ForbiddenException;
 import ru.beeline.documentservice.exception.NotFoundException;
 import ru.beeline.documentservice.exception.S3Exception;
@@ -50,5 +51,15 @@ public class CustomExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .header("content-type", MediaType.APPLICATION_JSON_VALUE)
                 .body(e.getMessage());
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<String> handleMultipartException(MultipartException e) {
+        String errorMessage = "Ошибка при загрузке файла, Заголовок: Content-Type должен быть: multipart/form-data; " +
+                "boundary=<calculated when request is sent>";
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .header("content-type", MediaType.APPLICATION_JSON_VALUE)
+                .body(errorMessage);
     }
 }
