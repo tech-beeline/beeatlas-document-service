@@ -11,9 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ru.beeline.documentservice.client.CamundaClient;
+import ru.beeline.documentservice.controller.RequestContext;
 import ru.beeline.documentservice.domain.S3Document;
 import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
 import ru.beeline.documentservice.dto.CamundaVariableDTO;
@@ -26,9 +26,7 @@ import ru.beeline.documentservice.repository.DocumentRepository;
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -90,26 +88,22 @@ public class DocumentService {
         return parts.length > 0 ? parts[parts.length - 1] : key;
     }
 
-    private void validateRequest(HttpServletRequest request, String userRoles) {
-        if (request.getContentType() == null || !request.getContentType().startsWith("multipart/form-data")) {
-            throw new ValidationException("Не верный заголовок: Content-Type");
-        }
+    private void validateRequest(HttpServletRequest request) {
         String contentDisposition = request.getHeader("Content-Disposition");
-        if (contentDisposition == null || !contentDisposition.contains("filename=")) {
-            throw new ValidationException("Не верный заголовок: Content-Disposition");
+        if (contentDisposition == null) {
+            throw new ValidationException("Отсутствует заголовок Content-Disposition");
         }
-        List<String> roles = Arrays.asList(userRoles.split(","));
-        if (!roles.contains("ADMINISTRATOR")) {
-            throw new ForbiddenException("Доступ запрещен");
+        if (!RequestContext.getRoles().contains("ADMINISTRATOR")) {
+            throw new ForbiddenException("403 Forbidden.");
         }
     }
 
-    public ResponseEntity<String> uploadFileToS3(MultipartFile file, Boolean sync, String userRoles,
-                                                 Integer userId, String entityType, HttpServletRequest request) {
-        validateRequest(request, userRoles);
-        String fileName = removePrefix(request.getHeader("Content-Disposition"), "filename=");
+    public ResponseEntity<String> uploadFileToS3(MultipartFile file, Boolean sync, Integer userId,
+                                                 String entityType, HttpServletRequest request) {
+        validateRequest(request);
+        String fileName = request.getHeader("Content-Disposition");
         if (fileName.isEmpty()) {
-            throw new ValidationException("Отсутствует имя файла в заголовке Content-Disposition, filename");
+            throw new ValidationException("Отсутствует имя файла в заголовке Content-Disposition");
         }
         uploadFile(fileName, file);
         Integer docId = saveDocumentInfo(fileName, userId);
@@ -125,15 +119,6 @@ public class DocumentService {
             return ResponseEntity.status(HttpStatus.CREATED).body("{\"docId\": " + docId + "}");
         } else {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Failed to start Camunda process");
-        }
-
-    }
-
-    private static String removePrefix(String original, String prefix) {
-        if (original.startsWith(prefix)) {
-            return original.substring(prefix.length());
-        } else {
-            return original;
         }
     }
 
