@@ -1,10 +1,14 @@
 package ru.beeline.documentservice.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ru.beeline.documentservice.utils.Constants.*;
+import static ru.beeline.documentservice.utils.Constants.USER_ID_HEADER;
+import static ru.beeline.documentservice.utils.Constants.USER_PERMISSION_HEADER;
+import static ru.beeline.documentservice.utils.Constants.USER_PRODUCTS_IDS_HEADER;
+import static ru.beeline.documentservice.utils.Constants.USER_ROLES_HEADER;
 
 public class RequestContext {
     private static final ThreadLocal<Map<String, Object>> headersThreadLocal = new ThreadLocal<>();
@@ -22,7 +26,13 @@ public class RequestContext {
     }
 
     public static List<String> getRoles() {
-        return (List<String>) getHeaders().get(USER_ROLES_HEADER);
+        List<String> roles = (List<String>) getHeaders().get(USER_ROLES_HEADER);
+        if (roles == null) {
+            return new ArrayList<>();
+        }
+        return roles.stream()
+                .map(role -> role.replaceAll("^[^a-zA-Z]+|[^a-zA-Z]+$", ""))
+                .collect(Collectors.toList());
     }
 
     public static String getUserId() {

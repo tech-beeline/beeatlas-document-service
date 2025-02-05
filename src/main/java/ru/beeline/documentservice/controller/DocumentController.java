@@ -29,11 +29,10 @@ public class DocumentController {
     @PostMapping("/import/{entityType}")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
                                              @RequestParam(value = "sync", required = false) boolean sync,
-                                             @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles,
                                              @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
                                              @PathVariable String entityType,
                                              HttpServletRequest request) {
-        return documentService.uploadFileToS3(file, sync, userRoles, userId, entityType, request);
+        return documentService.uploadFileToS3(file, sync, userId, entityType, request);
     }
 }
 
