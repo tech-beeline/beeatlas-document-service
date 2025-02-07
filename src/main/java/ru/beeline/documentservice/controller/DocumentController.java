@@ -1,9 +1,11 @@
 package ru.beeline.documentservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.service.DocumentService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,14 +29,25 @@ public class DocumentController {
     }
 
     @PostMapping("/import/{entityType}")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file,
-                                             @RequestParam(value = "sync", required = false) boolean sync,
-                                             @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
-                                             @PathVariable String entityType,
-                                             HttpServletRequest request) {
-        return documentService.uploadFileToS3(file, sync, userId, entityType, request);
+    public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestParam("file") MultipartFile file,
+                                                              @RequestParam(value = "sync", required = false) boolean sync,
+                                                              @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
+                                                              @PathVariable String entityType,
+                                                              HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadFileAndStartProcess(file,
+                sync, userId, entityType, request));
+    }
+
+    @PostMapping("/documents/{path_name}/{doc_type}")
+    public ResponseEntity<DocIdDTO> uploadExcelFile(@RequestParam("file") MultipartFile file,
+                                                    @RequestParam(value = "isPublic", required = false) boolean isPublic,
+                                                    @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
+                                                    @PathVariable String path_name,
+                                                    @PathVariable String doc_type,
+                                                    HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
+                isPublic, path_name, doc_type, request, userId));
     }
 }
-
 
 

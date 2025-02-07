@@ -13,6 +13,5 @@ import lombok.NoArgsConstructor;
 public class CamundaVariableDTO {
 
     private Object value;
-
     private String type;
 }
