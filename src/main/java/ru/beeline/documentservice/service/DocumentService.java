@@ -17,6 +17,7 @@ import ru.beeline.documentservice.controller.RequestContext;
 import ru.beeline.documentservice.domain.S3Document;
 import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
 import ru.beeline.documentservice.dto.CamundaVariableDTO;
+import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.exception.ForbiddenException;
 import ru.beeline.documentservice.exception.NotFoundException;
 import ru.beeline.documentservice.exception.S3Exception;
@@ -98,15 +99,16 @@ public class DocumentService {
         }
     }
 
-    public ResponseEntity<String> uploadFileToS3(MultipartFile file, Boolean sync, Integer userId,
-                                                 String entityType, HttpServletRequest request) {
+    public DocIdDTO uploadFileAndStartProcess(MultipartFile file, Boolean sync, Integer userId,
+                                              String entityType, HttpServletRequest request) {
         validateRequest(request);
         String fileName = request.getHeader("Content-Disposition");
         if (fileName.isEmpty()) {
             throw new ValidationException("Отсутствует имя файла в заголовке Content-Disposition");
         }
+        fileName = "import/" + fileName;
         uploadFile(fileName, file);
-        Integer docId = saveDocumentInfo(fileName, userId);
+        Integer docId = saveDocumentInfo(fileName, userId, "excel", "USER", true);
         CamundaProcessRequestDTO requestBody = new CamundaProcessRequestDTO();
         Map<String, CamundaVariableDTO> variables = new HashMap<>();
         variables.put("entityType", new CamundaVariableDTO(entityType, "String"));
@@ -116,19 +118,20 @@ public class DocumentService {
         requestBody.setBusinessKey(docId);
         String response = camundaClient.postCamunda(requestBody);
         if (response != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body("{\"docId\": " + docId + "}");
+            return DocIdDTO.builder().docId(docId).build();
         } else {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Failed to start Camunda process");
+            throw new S3Exception("Failed to start Camunda process");
         }
     }
 
-    private Integer saveDocumentInfo(String fileName, Integer userId) {
+    private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType,
+                                     String sourceType, Boolean isPublic) {
         S3Document document = new S3Document();
-        document.setDocType("excel");
-        document.setKey("import/" + fileName);
-        document.setSourceType("USER");
-        document.setSourceId(userId);
-        document.setIsPublic(true);
+        document.setDocType(docType);
+        document.setKey(fileName);
+        document.setSourceType(sourceType);
+        document.setSourceId(sourceId);
+        document.setIsPublic(isPublic);
         document.setCreatedDate(LocalDateTime.now());
         return documentRepository.save(document).getId();
     }
@@ -142,13 +145,34 @@ public class DocumentService {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object("import/" + fileName)
+                            .object(fileName)
                             .stream(inputStream, file.getSize(), -1)
                             .contentType(file.getContentType())
                             .build());
             log.info("Файл успешно загружен: " + fileName);
         } catch (Exception e) {
             log.error("Не удалось загрузить файл: " + e.getMessage());
+            throw new S3Exception("Не удалось загрузить файл в S3");
+        }
+    }
+
+    public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String path_name,
+                                    String doc_type, HttpServletRequest request, Integer userId) {
+        String fileName = request.getHeader("Content-Disposition");
+        validationUploadExcelFile(request, fileName);
+        fileName = path_name + "/" + fileName;
+        uploadFile(fileName, file);
+        String sourceType = userId != null ? "USER" : "SYSTEM";
+        return DocIdDTO.builder().docId(saveDocumentInfo(fileName, userId, doc_type, sourceType, isPublic)).build();
+    }
+
+    private void validationUploadExcelFile(HttpServletRequest request, String fileName) {
+        String contentDisposition = request.getHeader("Content-Disposition");
+        if (contentDisposition == null) {
+            throw new ValidationException("Отсутствует заголовок Content-Disposition");
+        }
+        if (fileName.isEmpty()) {
+            throw new ValidationException("Отсутствует имя файла в заголовке Content-Disposition");
         }
     }
 }
