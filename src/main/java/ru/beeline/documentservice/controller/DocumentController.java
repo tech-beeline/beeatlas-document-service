@@ -1,5 +1,6 @@
 package ru.beeline.documentservice.controller;
 
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ public class DocumentController {
     private DocumentService documentService;
 
     @GetMapping("/documents/{id}")
+    @ApiOperation(value = "get document")
     public ResponseEntity<byte[]> getDocument(@PathVariable Integer id,
                                               @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles,
                                               @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId) {
@@ -29,6 +31,7 @@ public class DocumentController {
     }
 
     @PostMapping("/import/{entityType}")
+    @ApiOperation(value = "upload file and start process")
     public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestParam("file") MultipartFile file,
                                                               @RequestParam(value = "sync", required = false) boolean sync,
                                                               @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
@@ -39,6 +42,7 @@ public class DocumentController {
     }
 
     @PostMapping("/documents/{path_name}/{doc_type}")
+    @ApiOperation(value = "upload excel file")
     public ResponseEntity<DocIdDTO> uploadExcelFile(@RequestParam("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
