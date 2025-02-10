@@ -20,6 +20,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
         try {
             if (request.getRequestURI().contains("/documents") ||
                     request.getRequestURI().contains("/swagger") ||
+                    request.getRequestURI().contains("/error") ||
                     request.getRequestURI().contains("/v2/api-docs")) {
                 return true;
             }
