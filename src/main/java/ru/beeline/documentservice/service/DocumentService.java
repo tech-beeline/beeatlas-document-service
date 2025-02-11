@@ -157,17 +157,17 @@ public class DocumentService {
     }
 
     public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String path_name,
-                                    String doc_type, HttpServletRequest request, Integer userId) {
-        String fileName = request.getHeader("Content-Disposition");
-        validationUploadExcelFile(request, fileName);
+                                    String doc_type, Integer userId,
+                                    String contentDisposition) {
+        String fileName = contentDisposition;
+        validationUploadExcelFile(contentDisposition, fileName);
         fileName = path_name + "/" + fileName;
         uploadFile(fileName, file);
         String sourceType = userId != null ? "USER" : "SYSTEM";
         return DocIdDTO.builder().docId(saveDocumentInfo(fileName, userId, doc_type, sourceType, isPublic)).build();
     }
 
-    private void validationUploadExcelFile(HttpServletRequest request, String fileName) {
-        String contentDisposition = request.getHeader("Content-Disposition");
+    private void validationUploadExcelFile(String contentDisposition, String fileName) {
         if (contentDisposition == null) {
             throw new ValidationException("Отсутствует заголовок Content-Disposition");
         }

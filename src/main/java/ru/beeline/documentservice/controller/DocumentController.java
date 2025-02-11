@@ -1,6 +1,7 @@
 package ru.beeline.documentservice.controller;
 
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import ru.beeline.documentservice.service.DocumentService;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static ru.beeline.documentservice.utils.Constants.CONTENT_DISPOSITION;
 import static ru.beeline.documentservice.utils.Constants.USER_ID_HEADER;
 import static ru.beeline.documentservice.utils.Constants.USER_ROLES_HEADER;
 
@@ -43,14 +45,14 @@ public class DocumentController {
 
     @PostMapping("/documents/{path_name}/{doc_type}")
     @ApiOperation(value = "upload excel file")
-    public ResponseEntity<DocIdDTO> uploadExcelFile(@RequestParam("file") MultipartFile file,
+    public ResponseEntity<DocIdDTO> uploadExcelFile(@ApiParam(value = "File to upload", required = true) @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
+                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = false) @ApiParam(value = "Content-Disposition header") String contentDisposition,
                                                     @PathVariable String path_name,
-                                                    @PathVariable String doc_type,
-                                                    HttpServletRequest request) {
+                                                    @PathVariable String doc_type) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
-                isPublic, path_name, doc_type, request, userId));
+                isPublic, path_name, doc_type, userId, contentDisposition));
     }
 }
 
