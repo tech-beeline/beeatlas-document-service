@@ -34,7 +34,7 @@ public class DocumentController {
 
     @PostMapping("/import/{entityType}")
     @ApiOperation(value = "upload file and start process")
-    public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestParam("file") MultipartFile file,
+    public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestPart("file") MultipartFile file,
                                                               @RequestParam(value = "sync", required = false) boolean sync,
                                                               @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
                                                               @PathVariable String entityType,
