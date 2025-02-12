@@ -140,8 +140,7 @@ public class DocumentService {
         if (file == null || file.isEmpty()) {
             throw new ValidationException("Файл отсутствует или пуст");
         }
-        try {
-            InputStream inputStream = file.getInputStream();
+        try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -156,15 +155,15 @@ public class DocumentService {
         }
     }
 
-    public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String path_name,
-                                    String doc_type, Integer userId,
+    public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String pathName,
+                                    String docType, Integer userId,
                                     String contentDisposition) {
         String fileName = contentDisposition;
         validationUploadExcelFile(contentDisposition, fileName);
-        fileName = path_name + "/" + fileName;
+        fileName = pathName + "/" + fileName;
         uploadFile(fileName, file);
         String sourceType = userId != null ? "USER" : "SYSTEM";
-        return DocIdDTO.builder().docId(saveDocumentInfo(fileName, userId, doc_type, sourceType, isPublic)).build();
+        return DocIdDTO.builder().docId(saveDocumentInfo(fileName, userId, docType, sourceType, isPublic)).build();
     }
 
     private void validationUploadExcelFile(String contentDisposition, String fileName) {
@@ -174,6 +173,21 @@ public class DocumentService {
         if (fileName.isEmpty()) {
             throw new ValidationException("Отсутствует имя файла в заголовке Content-Disposition");
         }
+    }
+
+    public void documentReloading(Integer docId, MultipartFile file, String contentDisposition) {
+        S3Document s3Document = documentRepository.findById(docId)
+                .orElseThrow(() -> new NotFoundException("Запись с данным id не найдена"));
+        if (!(s3Document.getKey() == null || s3Document.getKey().isEmpty())) {
+            throw new ValidationException("Документ уже загружен.");
+        }
+        String fileName = contentDisposition;
+        validationUploadExcelFile(contentDisposition, fileName);
+        fileName = "export/" + fileName;
+        uploadFile(fileName, file);
+        s3Document.setKey(fileName);
+        s3Document.setLastModifiedDate(LocalDateTime.now());
+        documentRepository.save(s3Document);
     }
 }
 

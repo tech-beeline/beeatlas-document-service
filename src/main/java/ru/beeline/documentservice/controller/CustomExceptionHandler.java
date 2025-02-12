@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import ru.beeline.documentservice.exception.ForbiddenException;
@@ -68,6 +69,15 @@ public class CustomExceptionHandler {
     public ResponseEntity<String> handleContentTypeException(MissingServletRequestPartException e) {
         String errorMessage = "Заголовок: Content-Type должен быть: multipart/form-data; " +
                 "boundary=<calculated when request is sent>";
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .header("content-type", MediaType.APPLICATION_JSON_VALUE)
+                .body(errorMessage);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        String errorMessage = "Ошибка при загрузке файла: превышен максимальный размер файла.";
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .header("content-type", MediaType.APPLICATION_JSON_VALUE)
