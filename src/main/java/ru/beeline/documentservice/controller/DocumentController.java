@@ -24,7 +24,7 @@ public class DocumentController {
     private DocumentService documentService;
 
     @GetMapping("/documents/{id}")
-    @ApiOperation(value = "get document")
+    @ApiOperation(value = "Получение документа")
     public ResponseEntity<byte[]> getDocument(@PathVariable Integer id,
                                               @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles,
                                               @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId) {
@@ -33,7 +33,7 @@ public class DocumentController {
     }
 
     @PostMapping("/import/{entityType}")
-    @ApiOperation(value = "upload file and start process")
+    @ApiOperation(value = "Загрузка документа и старт процесса")
     public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestPart("file") MultipartFile file,
                                                               @RequestParam(value = "sync", required = false) boolean sync,
                                                               @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
@@ -44,15 +44,26 @@ public class DocumentController {
     }
 
     @PostMapping("/documents/{path_name}/{doc_type}")
-    @ApiOperation(value = "upload excel file")
+    @ApiOperation(value = "Загрузка документов ")
     public ResponseEntity<DocIdDTO> uploadExcelFile(@ApiParam(value = "File to upload", required = true) @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
-                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = false) @ApiParam(value = "Content-Disposition header") String contentDisposition,
-                                                    @PathVariable String path_name,
-                                                    @PathVariable String doc_type) {
+                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = false)
+                                                    @ApiParam(value = "Content-Disposition header") String contentDisposition,
+                                                    @PathVariable(name = "path_name") String pathName,
+                                                    @PathVariable(name = "doc_type") String docType) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
-                isPublic, path_name, doc_type, userId, contentDisposition));
+                isPublic, pathName, docType, userId, contentDisposition));
+    }
+
+    @PatchMapping("/export/{doc_id}")
+    @ApiOperation(value = "Дозагрузка документов")
+    public ResponseEntity patchCapabilityMap(@PathVariable(name = "doc_id") Integer docId,
+                                             @RequestPart("file") MultipartFile file,
+                                             @RequestHeader(value = CONTENT_DISPOSITION, required = false)
+                                             @ApiParam(value = "Content-Disposition header") String contentDisposition) {
+        documentService.documentReloading(docId, file, contentDisposition);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
 

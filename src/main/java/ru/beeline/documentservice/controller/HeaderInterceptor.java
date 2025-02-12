@@ -21,7 +21,8 @@ public class HeaderInterceptor implements HandlerInterceptor {
             if (request.getRequestURI().contains("/documents") ||
                     request.getRequestURI().contains("/swagger") ||
                     request.getRequestURI().contains("/error") ||
-                    request.getRequestURI().contains("/v2/api-docs")) {
+                    request.getRequestURI().contains("/v2/api-docs") ||
+                    request.getRequestURI().contains("/export")) {
                 return true;
             }
             Map<String, Object> headers = new HashMap<>();
