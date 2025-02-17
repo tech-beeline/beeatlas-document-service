@@ -30,7 +30,7 @@ public class CamundaClient {
             HttpEntity<CamundaProcessRequestDTO> entity = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    camundaUrl + "/engine-rest/process-definition/key/Process_0m2lqgf/start",
+                    camundaUrl + "/engine-rest/process-definition/key/Process_0m2lqgf/start?async=true",
                     HttpMethod.POST, entity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
