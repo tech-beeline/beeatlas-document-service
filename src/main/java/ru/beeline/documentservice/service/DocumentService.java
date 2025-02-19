@@ -16,6 +16,7 @@ import ru.beeline.documentservice.client.CamundaClient;
 import ru.beeline.documentservice.controller.RequestContext;
 import ru.beeline.documentservice.domain.S3Document;
 import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
+import ru.beeline.documentservice.dto.CamundaProcessRequestExportDTO;
 import ru.beeline.documentservice.dto.CamundaVariableDTO;
 import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.exception.ForbiddenException;
@@ -188,6 +189,36 @@ public class DocumentService {
         s3Document.setKey(fileName);
         s3Document.setLastModifiedDate(LocalDateTime.now());
         documentRepository.save(s3Document);
+    }
+
+    public DocIdDTO asynchronousDocumentLoading(String entityType, Integer userId) {
+
+        Integer docId = saveDocument("excel", userId, "USER", true, entityType, "export");
+        CamundaProcessRequestExportDTO requestBody = new CamundaProcessRequestExportDTO();
+        Map<String, CamundaVariableDTO> variables = new HashMap<>();
+        variables.put("entityType", new CamundaVariableDTO(entityType, "String"));
+        variables.put("docId", new CamundaVariableDTO(docId, "Integer"));
+        requestBody.setVariables(variables);
+        requestBody.setBusinessKey(docId + "export");
+        String response = camundaClient.postCamunda(requestBody);
+        if (response != null) {
+            return DocIdDTO.builder().docId(docId).build();
+        } else {
+            throw new S3Exception("Failed to start Camunda process");
+        }
+    }
+
+    private Integer saveDocument(String docType, Integer sourceId, String sourceType, Boolean isPublic,
+                                 String entityType, String operationType) {
+        S3Document document = new S3Document();
+        document.setDocType(docType);
+        document.setSourceType(sourceType);
+        document.setSourceId(sourceId);
+        document.setIsPublic(isPublic);
+        document.setEntityType(entityType);
+        document.setOperationType(operationType);
+        document.setCreatedDate(LocalDateTime.now());
+        return documentRepository.save(document).getId();
     }
 }
 

@@ -8,6 +8,7 @@ import ru.beeline.documentservice.exception.ForbiddenException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ru.beeline.documentservice.utils.Constants.*;
@@ -22,7 +23,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
                     request.getRequestURI().contains("/swagger") ||
                     request.getRequestURI().contains("/error") ||
                     request.getRequestURI().contains("/v2/api-docs") ||
-                    request.getRequestURI().contains("/export")) {
+                    Pattern.compile("/export/\\d+").matcher(request.getRequestURI()).find()) {
                 return true;
             }
             Map<String, Object> headers = new HashMap<>();

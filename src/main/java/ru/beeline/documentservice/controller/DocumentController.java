@@ -65,6 +65,13 @@ public class DocumentController {
         documentService.documentReloading(docId, file, contentDisposition);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @PostMapping("/export/{entity_type}")
+    @ApiOperation(value = "")
+    public ResponseEntity<DocIdDTO> postAsynchronousDocumentLoading(@PathVariable(name = "entity_type") String entityType,
+                                                                    @RequestHeader(value = USER_ID_HEADER) Integer userId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(documentService.asynchronousDocumentLoading(entityType, userId));
+    }
 }
 
 
