@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
+import ru.beeline.documentservice.dto.CamundaProcessRequestExportDTO;
 
 @Slf4j
 @Service
@@ -22,15 +23,23 @@ public class CamundaClient {
         this.restTemplate = restTemplate;
     }
 
-    public String postCamunda(CamundaProcessRequestDTO requestBody) {
+    public String postCamunda(Object requestBody) {
+        String processKey;
+        if (requestBody instanceof CamundaProcessRequestDTO) {
+            processKey = "Process_0m2lqgf";
+        } else if (requestBody instanceof CamundaProcessRequestExportDTO) {
+            processKey = "Process_1uac9qb";
+        } else {
+            log.error("Unsupported request body type: {}", requestBody.getClass().getName());
+            return null;
+        }
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<CamundaProcessRequestDTO> entity = new HttpEntity<>(requestBody, headers);
+            HttpEntity<Object> entity = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    camundaUrl + "/engine-rest/process-definition/key/Process_0m2lqgf/start?async=true",
+                    camundaUrl + "/engine-rest/process-definition/key/" + processKey + "/start?async=true",
                     HttpMethod.POST, entity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
@@ -46,5 +55,5 @@ public class CamundaClient {
             log.error("Exception occurred: ", e);
         }
         return null;
-        }
     }
+}
