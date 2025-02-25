@@ -109,7 +109,8 @@ public class DocumentService {
         }
         fileName = "import/" + fileName;
         uploadFile(fileName, file);
-        Integer docId = saveDocumentInfo(fileName, userId, "excel", "USER", true);
+        Integer docId = saveDocumentInfo(fileName, userId, "excel", "USER", true,
+                entityType, "import");
         CamundaProcessRequestDTO requestBody = new CamundaProcessRequestDTO();
         Map<String, CamundaVariableDTO> variables = new HashMap<>();
         variables.put("entityType", new CamundaVariableDTO(entityType, "String"));
@@ -133,6 +134,20 @@ public class DocumentService {
         document.setSourceType(sourceType);
         document.setSourceId(sourceId);
         document.setIsPublic(isPublic);
+        document.setCreatedDate(LocalDateTime.now());
+        return documentRepository.save(document).getId();
+    }
+
+    private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType,
+                                     String sourceType, Boolean isPublic, String entityType, String operationType) {
+        S3Document document = new S3Document();
+        document.setDocType(docType);
+        document.setKey(fileName);
+        document.setSourceType(sourceType);
+        document.setSourceId(sourceId);
+        document.setIsPublic(isPublic);
+        document.setEntityType(entityType);
+        document.setOperationType(operationType);
         document.setCreatedDate(LocalDateTime.now());
         return documentRepository.save(document).getId();
     }
