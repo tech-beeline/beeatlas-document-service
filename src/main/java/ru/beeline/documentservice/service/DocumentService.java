@@ -153,7 +153,7 @@ public class DocumentService {
     }
 
     public void uploadFile(String fileName, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
+        if (file == null) {
             throw new ValidationException("Файл отсутствует или пуст");
         }
         try (InputStream inputStream = file.getInputStream()) {
