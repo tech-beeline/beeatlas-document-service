@@ -13,24 +13,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.beeline.documentservice.client.CamundaClient;
+import ru.beeline.documentservice.client.PackageClient;
 import ru.beeline.documentservice.controller.RequestContext;
 import ru.beeline.documentservice.domain.S3Document;
 import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
 import ru.beeline.documentservice.dto.CamundaProcessRequestExportDTO;
 import ru.beeline.documentservice.dto.CamundaVariableDTO;
 import ru.beeline.documentservice.dto.DocIdDTO;
+import ru.beeline.documentservice.dto.DocumentImportDTO;
+import ru.beeline.documentservice.dto.PackageV2DTO;
 import ru.beeline.documentservice.exception.ForbiddenException;
 import ru.beeline.documentservice.exception.NotFoundException;
 import ru.beeline.documentservice.exception.S3Exception;
 import ru.beeline.documentservice.exception.ValidationException;
+import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,7 +43,13 @@ public class DocumentService {
     private CamundaClient camundaClient;
 
     @Autowired
+    private PackageClient packageClient;
+
+    @Autowired
     private DocumentRepository documentRepository;
+
+    @Autowired
+    private DocumentImportMapper documentImportMapper;
 
     @Autowired
     private MinioClient minioClient;
@@ -234,6 +243,25 @@ public class DocumentService {
         document.setOperationType(operationType);
         document.setCreatedDate(LocalDateTime.now());
         return documentRepository.save(document).getId();
+    }
+
+    public List<DocumentImportDTO> getDocumentsImport(Integer userId) {
+        if (!RequestContext.getRoles().contains("ADMINISTRATOR")) {
+            throw new ForbiddenException("403 Forbidden.");
+        }
+        List<S3Document> s3Documents =
+                documentRepository.findBySourceTypeAndSourceIdAndOperationTypeAndDeletedDateIsNull("USER",
+                        userId, "import");
+        if (s3Documents.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<PackageV2DTO> packageV2DTOS = packageClient.getPackagesList();
+        List<DocumentImportDTO> result = packageV2DTOS.stream()
+                .flatMap(packageV2DTO -> s3Documents.stream()
+                        .filter(s3Document -> s3Document.getId() == packageV2DTO.getSourceId())
+                        .map(s3Document -> documentImportMapper.convertToDto(s3Document, packageV2DTO)))
+                .sorted(Comparator.comparing(DocumentImportDTO::getId)).collect(Collectors.toList());
+        return result;
     }
 }
 
