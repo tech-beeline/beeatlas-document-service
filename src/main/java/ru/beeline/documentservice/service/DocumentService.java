@@ -256,11 +256,12 @@ public class DocumentService {
             return new ArrayList<>();
         }
         List<PackageV2DTO> packageV2DTOS = packageClient.getPackagesList();
-        List<DocumentImportDTO> result = packageV2DTOS.stream()
-                .flatMap(packageV2DTO -> s3Documents.stream()
-                        .filter(s3Document -> s3Document.getId() == packageV2DTO.getSourceId())
-                        .map(s3Document -> documentImportMapper.convertToDto(s3Document, packageV2DTO)))
-                .sorted(Comparator.comparing(DocumentImportDTO::getId)).collect(Collectors.toList());
+        List<DocumentImportDTO> result = s3Documents.stream()
+                .flatMap(s3Document -> packageV2DTOS.stream()
+                        .filter(packageV2DTO -> s3Document.getId().equals(packageV2DTO.getSourceId()))
+                        .map(packageV2DTO -> documentImportMapper.convertToDto(s3Document, packageV2DTO)))
+                .sorted(Comparator.comparing(DocumentImportDTO::getId))
+                .collect(Collectors.toList());
         return result;
     }
 }
