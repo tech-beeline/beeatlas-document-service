@@ -1,6 +1,5 @@
 package ru.beeline.documentservice.dto;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -14,8 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DocumentImportDTO {
-
+public class DocumentExportDTO {
     private Integer id;
     @JsonProperty("doc_type")
     private String docType;
@@ -23,8 +21,9 @@ public class DocumentImportDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private LocalDateTime createdDate;
     private String key;
+    @JsonProperty("entity_type")
     private String entityType;
+    @JsonProperty("operation_type")
     private String operationType;
-    @JsonProperty("package_info")
-    private PackageV2DTO packageInfo;
+    private String status;
 }
