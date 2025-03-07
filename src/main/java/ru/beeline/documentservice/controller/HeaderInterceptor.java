@@ -26,7 +26,8 @@ public class HeaderInterceptor implements HandlerInterceptor {
                 return true;
             }
             if (request.getRequestURI().contains("/documents") &&
-                    !request.getRequestURI().equals("/api/v1/documents/import")) {
+                    !request.getRequestURI().equals("/api/v1/documents/import") &&
+                    !request.getRequestURI().equals("/api/v1/documents/export")) {
                 return true;
             }
             Map<String, Object> headers = new HashMap<>();

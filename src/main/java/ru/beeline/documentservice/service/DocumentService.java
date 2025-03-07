@@ -20,12 +20,14 @@ import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
 import ru.beeline.documentservice.dto.CamundaProcessRequestExportDTO;
 import ru.beeline.documentservice.dto.CamundaVariableDTO;
 import ru.beeline.documentservice.dto.DocIdDTO;
+import ru.beeline.documentservice.dto.DocumentExportDTO;
 import ru.beeline.documentservice.dto.DocumentImportDTO;
 import ru.beeline.documentservice.dto.PackageV2DTO;
 import ru.beeline.documentservice.exception.ForbiddenException;
 import ru.beeline.documentservice.exception.NotFoundException;
 import ru.beeline.documentservice.exception.S3Exception;
 import ru.beeline.documentservice.exception.ValidationException;
+import ru.beeline.documentservice.mapper.DocumentExportMapper;
 import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 
@@ -50,6 +52,9 @@ public class DocumentService {
 
     @Autowired
     private DocumentImportMapper documentImportMapper;
+
+    @Autowired
+    private DocumentExportMapper documentExportMapper;
 
     @Autowired
     private MinioClient minioClient;
@@ -263,6 +268,20 @@ public class DocumentService {
                 .sorted(Comparator.comparing(DocumentImportDTO::getId))
                 .collect(Collectors.toList());
         return result;
+    }
+
+    public List<DocumentExportDTO> getDocumentsExport(Integer userId) {
+        List<S3Document> s3Documents =
+                documentRepository.findBySourceTypeAndSourceIdAndOperationTypeAndDeletedDateIsNull("USER",
+                        userId, "export");
+        if (s3Documents.isEmpty()) {
+            return new ArrayList<>();
+        } else {
+            return s3Documents.stream()
+                    .map(documentExportMapper::convertToDto)
+                    .sorted(Comparator.comparing(DocumentExportDTO::getId))
+                    .collect(Collectors.toList());
+        }
     }
 }
 

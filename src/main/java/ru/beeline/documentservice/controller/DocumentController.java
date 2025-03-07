@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.beeline.documentservice.dto.DocIdDTO;
+import ru.beeline.documentservice.dto.DocumentExportDTO;
 import ru.beeline.documentservice.dto.DocumentImportDTO;
 import ru.beeline.documentservice.service.DocumentService;
 
@@ -38,6 +39,12 @@ public class DocumentController {
     @ApiOperation(value = "Получения списка документов со связанными пакетами")
     public List<DocumentImportDTO> getDocumentsImport(@RequestHeader(value = USER_ID_HEADER) Integer userId) {
         return documentService.getDocumentsImport(userId);
+    }
+
+    @GetMapping("/documents/export")
+    @ApiOperation(value = "Получения списка документов export")
+    public List<DocumentExportDTO> getDocumentsExport(@RequestHeader(value = USER_ID_HEADER) Integer userId) {
+        return documentService.getDocumentsExport(userId);
     }
 
     @PostMapping("/import/{entityType}")
