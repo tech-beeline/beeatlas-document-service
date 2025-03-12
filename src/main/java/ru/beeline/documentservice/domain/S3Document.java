@@ -41,4 +41,10 @@ public class S3Document {
 
     @Column(name = "last_modified_date")
     private LocalDateTime lastModifiedDate;
+
+    @Column(name = "entity_type")
+    private String entityType;
+
+    @Column(name = "operation_type")
+    private String operationType;
 }
