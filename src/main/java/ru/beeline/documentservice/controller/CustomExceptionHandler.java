@@ -67,7 +67,9 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<String> handleContentTypeException(MissingServletRequestPartException e) {
-        String errorMessage = "Отсутствует обязательная часть запроса Key : " + e.getRequestPartName();
+        String errorMessage = "Заголовок: Content-Type должен быть: multipart/form-data; " +
+                "boundary=<calculated when request is sent> " +
+                "Проверьте обязательную часть запроса Key : " + e.getRequestPartName();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .header("content-type", MediaType.APPLICATION_JSON_VALUE)
