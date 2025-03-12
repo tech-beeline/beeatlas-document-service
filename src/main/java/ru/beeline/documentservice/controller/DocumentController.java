@@ -47,6 +47,7 @@ public class DocumentController {
         return documentService.getDocumentsExport(userId);
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*", exposedHeaders = "Content-Disposition")
     @PostMapping("/import/{entityType}")
     @ApiOperation(value = "Загрузка документа и старт процесса")
     public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestPart("file") MultipartFile file,
