@@ -16,13 +16,7 @@ import ru.beeline.documentservice.client.CamundaClient;
 import ru.beeline.documentservice.client.PackageClient;
 import ru.beeline.documentservice.controller.RequestContext;
 import ru.beeline.documentservice.domain.S3Document;
-import ru.beeline.documentservice.dto.CamundaProcessRequestDTO;
-import ru.beeline.documentservice.dto.CamundaProcessRequestExportDTO;
-import ru.beeline.documentservice.dto.CamundaVariableDTO;
-import ru.beeline.documentservice.dto.DocIdDTO;
-import ru.beeline.documentservice.dto.DocumentExportDTO;
-import ru.beeline.documentservice.dto.DocumentImportDTO;
-import ru.beeline.documentservice.dto.PackageV2DTO;
+import ru.beeline.documentservice.dto.*;
 import ru.beeline.documentservice.exception.ForbiddenException;
 import ru.beeline.documentservice.exception.NotFoundException;
 import ru.beeline.documentservice.exception.S3Exception;
@@ -36,6 +30,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -262,9 +257,16 @@ public class DocumentService {
         }
         List<PackageV2DTO> packageV2DTOS = packageClient.getPackagesList();
         List<DocumentImportDTO> result = s3Documents.stream()
-                .flatMap(s3Document -> packageV2DTOS.stream()
-                        .filter(packageV2DTO -> s3Document.getId().equals(packageV2DTO.getSourceId()))
-                        .map(packageV2DTO -> documentImportMapper.convertToDto(s3Document, packageV2DTO)))
+                .flatMap(s3Document -> {
+                            Optional<PackageV2DTO> matchingPackage = packageV2DTOS.stream()
+                                    .filter(packagev2 -> s3Document.getId().equals(packagev2.getSourceId()))
+                                    .findFirst();
+
+                            return matchingPackage
+                                    .map(p -> Stream.of(documentImportMapper.convertToDto(s3Document, p)))
+                                    .orElseGet(() -> Stream.of(documentImportMapper.convertToDto(s3Document, null)));
+                        }
+                )
                 .sorted(Comparator.comparing(DocumentImportDTO::getId))
                 .collect(Collectors.toList());
         return result;

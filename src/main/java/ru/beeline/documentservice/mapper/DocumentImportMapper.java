@@ -9,6 +9,18 @@ import ru.beeline.documentservice.dto.PackageV2DTO;
 public class DocumentImportMapper {
 
     public DocumentImportDTO convertToDto(S3Document s3Document, PackageV2DTO packageDTO) {
+        PackageV2DTO packageV2 = PackageV2DTO.builder()
+                .allParts(packageDTO.getAllParts())
+                .createdDate(packageDTO.getCreatedDate())
+                .errorParts(packageDTO.getErrorParts())
+                .operation(packageDTO.getOperation())
+                .packageId(packageDTO.getPackageId())
+                .processParts(packageDTO.getProcessParts())
+                .status(packageDTO.getStatus())
+                .successParts(packageDTO.getSuccessParts())
+                .source(packageDTO.getSource())
+                .sourceId(packageDTO.getSourceId())
+                .build();
         return DocumentImportDTO.builder()
                 .id(s3Document.getId())
                 .docType(s3Document.getDocType())
@@ -16,18 +28,7 @@ public class DocumentImportMapper {
                 .key(s3Document.getKey())
                 .entityType(s3Document.getEntityType())
                 .operationType(s3Document.getOperationType())
-                .packageInfo(PackageV2DTO.builder()
-                        .allParts(packageDTO.getAllParts())
-                        .createdDate(packageDTO.getCreatedDate())
-                        .errorParts(packageDTO.getErrorParts())
-                        .operation(packageDTO.getOperation())
-                        .packageId(packageDTO.getPackageId())
-                        .processParts(packageDTO.getProcessParts())
-                        .status(packageDTO.getStatus())
-                        .successParts(packageDTO.getSuccessParts())
-                        .source(packageDTO.getSource())
-                        .sourceId(packageDTO.getSourceId())
-                        .build())
+                .packageInfo(packageDTO == null ? null : packageV2)
                 .build();
     }
 }
