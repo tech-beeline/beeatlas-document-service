@@ -267,7 +267,7 @@ public class DocumentService {
                                     .orElseGet(() -> Stream.of(documentImportMapper.convertToDto(s3Document, null)));
                         }
                 )
-                .sorted(Comparator.comparing(DocumentImportDTO::getId))
+                .sorted(Comparator.comparing(DocumentImportDTO::getId).reversed())
                 .collect(Collectors.toList());
         return result;
     }
