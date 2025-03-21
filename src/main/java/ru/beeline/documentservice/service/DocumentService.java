@@ -267,7 +267,7 @@ public class DocumentService {
                                     .orElseGet(() -> Stream.of(documentImportMapper.convertToDto(s3Document, null)));
                         }
                 )
-                .sorted(Comparator.comparing(DocumentImportDTO::getId).reversed())
+                .sorted(Comparator.comparing(DocumentImportDTO::getCreatedDate).reversed())
                 .collect(Collectors.toList());
         return result;
     }
@@ -281,7 +281,7 @@ public class DocumentService {
         } else {
             return s3Documents.stream()
                     .map(documentExportMapper::convertToDto)
-                    .sorted(Comparator.comparing(DocumentExportDTO::getId))
+                    .sorted(Comparator.comparing(DocumentExportDTO::getCreatedDate).reversed())
                     .collect(Collectors.toList());
         }
     }
