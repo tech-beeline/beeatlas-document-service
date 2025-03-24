@@ -26,6 +26,8 @@ import ru.beeline.documentservice.repository.DocumentRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,17 +73,16 @@ public class DocumentService {
         } else {
             throw new ForbiddenException("Доступ запрещен");
         }
-        String documentKey = document.getKey();
+        String fileName = extractFileNameFromKey(key);
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                .replace("+", "%20");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(result.length);
-        String fileName = extractFileNameFromKey(documentKey);
-        headers.setContentDispositionFormData("attachment", fileName);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"");
+        headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
-                .contentLength(result.length)
+                .headers(headers)
                 .body(result);
     }
 
