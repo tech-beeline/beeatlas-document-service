@@ -227,6 +227,7 @@ public class DocumentService {
         Map<String, CamundaVariableDTO> variables = new HashMap<>();
         variables.put("entityType", new CamundaVariableDTO(entityType, "String"));
         variables.put("docId", new CamundaVariableDTO(docId, "Integer"));
+        variables.put("userId", new CamundaVariableDTO(userId, "Integer"));
         requestBody.setVariables(variables);
         requestBody.setBusinessKey(docId + "export");
         String response = camundaClient.postCamunda(requestBody);
