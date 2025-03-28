@@ -1,0 +1,32 @@
+env:
+  SPRING_PROFILES_ACTIVE: prod
+  SPRING_DATASOURCE_URL: "vault:eafdmmart/data/prod/fdm#url"
+  SPRING_DATASOURCE_USERNAME: "vault:eafdmmart/data/prod/fdm#username"
+  SPRING_DATASOURCE_PASSWORD: "vault:eafdmmart/data/prod/fdm#password"
+  INTEGRATION_CAMUNDA_SERVER_URL: "vault:eafdmmart/data/prod/fdm#camundaserverurl"
+  INTEGRATION_PACK_LOADER_SERVER_URL: "vault:eafdmmart/data/prod/fdm#packloaderserver"
+  AWS_S3_ACCESS_KEY: "vault:eafdmmart/data/prod/fdm#documentsS3ApiKey"
+  AWS_S3_SECRET_KEY: "vault:eafdmmart/data/prod/fdm#documentsS3Secret"
+  AWS_S3_REGION: "yd-ceph7-sl-vimpelcom-ru"
+  AWS_S3_ENDPOINT: "https://yd-ceph7-sl.vimpelcom.ru"
+  AWS_S3_BUCKET_NAME: "eafdmmart-prod-documents"
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-headers: Content-Type, authorization, Content-Disposition
+    nginx.ingress.kubernetes.io/cors-allow-methods: GET, POST, PUT, DELETE, OPTIONS
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/enable-cors: 'true'
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Disposition"
+
+
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
