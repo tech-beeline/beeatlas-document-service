@@ -9,7 +9,7 @@ env:
   AWS_S3_SECRET_KEY: "vault:eafdmmart/data/prod/fdm#documentsS3Secret"
   AWS_S3_REGION: "yd-ceph7-sl-vimpelcom-ru"
   AWS_S3_ENDPOINT: "https://yd-ceph7-sl.vimpelcom.ru"
-  AWS_S3_BUCKET_NAME: "eafdmmart-prod-documents"
+  AWS_S3_BUCKET_NAME: "eafdmmart-prod-doc"
 
 ingress:
   annotations:
