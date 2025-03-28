@@ -20,4 +20,4 @@ ingress:
     nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Disposition"
 
 
-replicaCount: 1
+replicaCount: 3
