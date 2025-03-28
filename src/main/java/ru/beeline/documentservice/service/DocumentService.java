@@ -180,7 +180,7 @@ public class DocumentService {
                             .build());
             log.info("Файл успешно загружен: " + fileName);
         } catch (Exception e) {
-            log.error("Не удалось загрузить файл: " + e.getMessage());
+            log.error("Не удалось загрузить файл", e);
             throw new S3Exception("Не удалось загрузить файл в S3");
         }
     }
