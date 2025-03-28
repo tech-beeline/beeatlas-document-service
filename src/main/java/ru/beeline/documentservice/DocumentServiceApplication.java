@@ -6,9 +6,10 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @EnableWebMvc
 @SpringBootApplication
-public class EventshistoryApplication {
+public class DocumentServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(EventshistoryApplication.class, args);
+        SpringApplication.run(DocumentServiceApplication.class, args);
     }
 }
+
