@@ -11,15 +11,6 @@ env:
   AWS_S3_ENDPOINT: "https://yd-ceph7-sl.vimpelcom.ru"
   AWS_S3_BUCKET_NAME: "eafdmmart-prod-doc"
 
-ingress:
-  annotations:
-    nginx.ingress.kubernetes.io/cors-allow-headers: Content-Type, authorization, Content-Disposition
-    nginx.ingress.kubernetes.io/cors-allow-methods: GET, POST, PUT, DELETE, OPTIONS
-    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/enable-cors: 'true'
-    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Disposition"
-
-
 replicaCount: 2
 
 resources:
