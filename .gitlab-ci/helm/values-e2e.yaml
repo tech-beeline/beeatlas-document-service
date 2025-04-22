@@ -11,6 +11,9 @@ env:
   AWS_S3_ENDPOINT: "https://yd-s3test-ceph04-hl.vimpelcom.ru"
   AWS_S3_BUCKET_NAME: "arch-code-documents-dev"
 
+podAnnotations:
+  vault.security.banzaicloud.io/vault-addr: "https://vault-test.vimpelcom.ru/"
+
 ingress:
   annotations:
     nginx.ingress.kubernetes.io/cors-allow-headers: Content-Type, authorization, Content-Disposition
