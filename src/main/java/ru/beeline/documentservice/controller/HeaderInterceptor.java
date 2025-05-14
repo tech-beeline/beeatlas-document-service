@@ -19,17 +19,20 @@ public class HeaderInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         try {
-            if (request.getRequestURI().contains("/swagger") ||
-                    request.getRequestURI().contains("/error") ||
-                    request.getRequestURI().contains("/v2/api-docs") ||
-                    Pattern.compile("/export/\\d+").matcher(request.getRequestURI()).find()) {
+            String uri = request.getRequestURI();
+
+            if (uri.contains("/swagger") ||
+                    uri.contains("/error") ||
+                    uri.contains("/v2/api-docs") ||
+                    Pattern.compile("/export/\\d+").matcher(uri).find() ||
+                    Pattern.compile("/versions/[^/]+/[^/]+").matcher(uri).matches() ||
+                    (uri.contains("/documents") &&
+                            !uri.equals("/api/v1/documents/import") &&
+                            !uri.equals("/api/v1/documents/export"))
+            ) {
                 return true;
             }
-            if (request.getRequestURI().contains("/documents") &&
-                    !request.getRequestURI().equals("/api/v1/documents/import") &&
-                    !request.getRequestURI().equals("/api/v1/documents/export")) {
-                return true;
-            }
+
             Map<String, Object> headers = new HashMap<>();
             Enumeration<String> headerNames = request.getHeaderNames();
             while (headerNames.hasMoreElements()) {
