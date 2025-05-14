@@ -24,8 +24,8 @@ public class HeaderInterceptor implements HandlerInterceptor {
             if (uri.contains("/swagger") ||
                     uri.contains("/error") ||
                     uri.contains("/v2/api-docs") ||
+                    uri.contains("/versions") ||
                     Pattern.compile("/export/\\d+").matcher(uri).find() ||
-                    Pattern.compile("/versions/[^/]+/[^/]+").matcher(uri).matches() ||
                     (uri.contains("/documents") &&
                             !uri.equals("/api/v1/documents/import") &&
                             !uri.equals("/api/v1/documents/export"))
