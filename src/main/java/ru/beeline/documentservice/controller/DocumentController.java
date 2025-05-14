@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.dto.DocumentExportDTO;
 import ru.beeline.documentservice.dto.DocumentImportDTO;
+import ru.beeline.documentservice.dto.DocumentVersionDTO;
 import ru.beeline.documentservice.service.DocumentService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,6 +70,14 @@ public class DocumentController {
                                                     @PathVariable(name = "doc_type") String docType) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
                 isPublic, pathName, docType, userId, contentDisposition));
+    }
+
+
+    @GetMapping("/versions/{documentationsTypeId}/{targetId}")
+    public List<DocumentVersionDTO> getDocumentVersions(
+            @PathVariable("documentationsTypeId") Integer documentationTypeId,
+            @PathVariable("targetId") Integer targetId) {
+        return documentService.getDocumentVersions(documentationTypeId, targetId);
     }
 
     @PatchMapping("/export/{doc_id}")

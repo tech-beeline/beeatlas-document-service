@@ -291,5 +291,18 @@ public class DocumentService {
                     .collect(Collectors.toList());
         }
     }
+
+    public List<DocumentVersionDTO> getDocumentVersions(Integer documentationTypeId, Integer targetId) {
+        List<S3Document> documents = documentRepository
+                .findByDocumentationTypeIdAndTargetEntityIdOrderByCreatedDateDesc(documentationTypeId, targetId);
+
+        return documents.stream()
+                .map(doc -> new DocumentVersionDTO(
+                        doc.getId(),
+                        doc.getKey(),
+                        doc.getCreatedDate()
+                ))
+                .collect(Collectors.toList());
+    }
 }
 
