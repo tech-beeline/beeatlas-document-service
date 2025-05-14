@@ -10,8 +10,8 @@ CREATE TABLE documents.documentation_type (
 
 -- Add columns to s3_doc table in documents schema
 ALTER TABLE documents.s3_doc
-    ADD COLUMN target_entity_id INT NOT NULL,
-ADD COLUMN documentation_type_id INT NOT NULL,
+    ADD COLUMN target_entity_id INT,
+ADD COLUMN documentation_type_id INT,
 ADD CONSTRAINT fk_documentation_type
     FOREIGN KEY (documentation_type_id)
     REFERENCES documents.documentation_type(id);
