@@ -73,7 +73,7 @@ public class DocumentController {
     }
 
 
-    @GetMapping("/versions/{documentationsTypeId}/{targetId}")
+    @GetMapping("/documents/versions/{documentationsTypeId}/{targetId}")
     public List<DocumentVersionDTO> getDocumentVersions(
             @PathVariable("documentationsTypeId") Integer documentationTypeId,
             @PathVariable("targetId") Integer targetId) {

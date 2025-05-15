@@ -1,5 +1,6 @@
 package ru.beeline.documentservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,5 +18,6 @@ public class DocumentVersionDTO {
     private String key;
 
     @JsonProperty("created_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime createdDate;
 }
