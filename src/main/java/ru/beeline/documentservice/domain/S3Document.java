@@ -48,10 +48,10 @@ public class S3Document {
     @Column(name = "operation_type")
     private String operationType;
 
-    @Column(name = "target_entity_id", nullable = false)
+    @Column(name = "target_entity_id")
     private Integer targetEntityId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "documentation_type_id", nullable = false)
+    @JoinColumn(name = "documentation_type_id")
     private DocumentationType documentationType;
 }
