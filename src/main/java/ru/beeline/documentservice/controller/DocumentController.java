@@ -63,13 +63,19 @@ public class DocumentController {
     @ApiOperation(value = "Загрузка документов")
     public ResponseEntity<DocIdDTO> uploadExcelFile(@ApiParam(value = "File to upload", required = true) @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
+                                                    @RequestParam(value = "targetId", required = false) Integer targetId,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
                                                     @RequestHeader(value = CONTENT_DISPOSITION, required = false)
                                                     @ApiParam(value = "Content-Disposition header") String contentDisposition,
                                                     @PathVariable(name = "path_name") String pathName,
                                                     @PathVariable(name = "doc_type") String docType) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
-                isPublic, pathName, docType, userId, contentDisposition));
+                                                                                              isPublic,
+                                                                                              pathName,
+                                                                                              docType,
+                                                                                              userId,
+                                                                                              contentDisposition,
+                                                                                              targetId));
     }
 
 
