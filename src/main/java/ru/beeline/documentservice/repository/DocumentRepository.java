@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import ru.beeline.documentservice.domain.S3Document;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DocumentRepository extends JpaRepository<S3Document, Integer> {
 
@@ -19,4 +20,7 @@ public interface DocumentRepository extends JpaRepository<S3Document, Integer> {
             @Param("documentationTypeId") Integer documentationTypeId,
             @Param("targetId") Integer targetId
     );
+
+    Optional<S3Document> findTopByDocumentationTypeIdAndTargetEntityIdOrderByCreatedDateDesc(Integer documentationTypeId,
+                                                                                             Integer targetEntityId);
 }

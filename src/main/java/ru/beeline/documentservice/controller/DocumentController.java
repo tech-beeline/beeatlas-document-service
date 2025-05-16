@@ -86,6 +86,15 @@ public class DocumentController {
         return documentService.getDocumentVersions(documentationTypeId, targetId);
     }
 
+
+    @GetMapping("/{documentationTypeId}/{targetId}")
+    public ResponseEntity<byte[]> getDocumentByTypeAndTarget(@PathVariable Integer documentationTypeId,
+                                                             @PathVariable Integer targetId,
+                                                             @RequestHeader(value = "USER-ID", required = false) Integer userId,
+                                                             @RequestHeader(value = "USER-ROLE", required = false) String userRoles) {
+        return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId, userRoles);
+    }
+
     @PatchMapping("/export/{doc_id}")
     @ApiOperation(value = "Дозагрузка документов")
     public ResponseEntity patchCapabilityMap(@PathVariable(name = "doc_id") Integer docId,

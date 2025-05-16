@@ -339,5 +339,47 @@ public class DocumentService {
         return documents.stream().map(doc -> new DocumentVersionDTO(doc.getId(), doc.getKey(), doc.getCreatedDate()))
                 .collect(Collectors.toList());
     }
+
+
+    public ResponseEntity<byte[]> getDocumentByTypeAndTarget(Integer documentationTypeId,
+                                                             Integer targetId,
+                                                             Integer userId,
+                                                             String userRoles) {
+        S3Document document = documentRepository.findTopByDocumentationTypeIdAndTargetEntityIdOrderByCreatedDateDesc(
+                documentationTypeId,
+                targetId).orElseThrow(() -> new NotFoundException("404: Документ не найден"));
+
+        String key = document.getKey();
+
+        boolean isPublic = Boolean.TRUE.equals(document.getIsPublic());
+        boolean isAdmin = userRoles != null && userRoles.contains("ADMINISTRATOR");
+        boolean isOwner = "user".equals(document.getSourceType()) && userId != null && userId.equals(document.getSourceId());
+
+        if (!isPublic && !isAdmin && !isOwner) {
+            throw new ForbiddenException("403: Доступ запрещен");
+        }
+
+        byte[] fileBytes;
+        try {
+            fileBytes = downloadDocumentFromS3(key);
+        } catch (Exception e) {
+            throw new RuntimeException("503: Ошибка при загрузке файла из S3");
+        }
+
+        String fileName = extractFileName(key);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentLength(fileBytes.length);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+        headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION);
+
+        return ResponseEntity.ok().headers(headers).body(fileBytes);
+    }
+
+    private String extractFileName(String key) {
+        int idx = key.lastIndexOf('/');
+        return idx >= 0 ? key.substring(idx + 1) : key;
+    }
 }
 
