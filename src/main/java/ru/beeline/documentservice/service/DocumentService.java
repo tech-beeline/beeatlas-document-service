@@ -214,7 +214,13 @@ public class DocumentService {
 
             Pattern pattern = Pattern.compile("filename=\"[^\"]*\\.([^\"]+)\"");
             Matcher matcher = pattern.matcher(contentDisposition);
-            if (!matcher.group(1).equals(documentationType.getDocType())) {
+
+            int lastDotIndex = contentDisposition.lastIndexOf(".");
+            if (lastDotIndex == -1) {
+                throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
+            }
+
+            if (!contentDisposition.substring(lastDotIndex + 1).equals(documentationType.getDocType())) {
                 throw new ValidationException("Расширение не соответсвует типу документации");
             }
 

@@ -65,7 +65,7 @@ public class DocumentController {
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
                                                     @RequestParam(value = "targetId", required = false) Integer targetId,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
-                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = false)
+                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = true)
                                                     @ApiParam(value = "Content-Disposition header") String contentDisposition,
                                                     @PathVariable(name = "path_name") String pathName,
                                                     @PathVariable(name = "doc_type") String docType) {
