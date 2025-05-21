@@ -87,11 +87,11 @@ public class DocumentController {
     }
 
 
-    @GetMapping("/{documentationTypeId}/{targetId}")
+    @GetMapping("/documents/{documentationTypeId}/{targetId}")
     public ResponseEntity<byte[]> getDocumentByTypeAndTarget(@PathVariable Integer documentationTypeId,
                                                              @PathVariable Integer targetId,
-                                                             @RequestHeader(value = "USER-ID", required = false) Integer userId,
-                                                             @RequestHeader(value = "USER-ROLE", required = false) String userRoles) {
+                                                             @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
+                                                             @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles) {
         return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId, userRoles);
     }
 

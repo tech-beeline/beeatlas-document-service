@@ -212,9 +212,6 @@ public class DocumentService {
             documentationType = documentationTypeRepository.findByFolder(pathName)
                     .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
 
-            Pattern pattern = Pattern.compile("filename=\"[^\"]*\\.([^\"]+)\"");
-            Matcher matcher = pattern.matcher(contentDisposition);
-
             int lastDotIndex = contentDisposition.lastIndexOf(".");
             if (lastDotIndex == -1) {
                 throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
@@ -369,7 +366,7 @@ public class DocumentService {
         try {
             fileBytes = downloadDocumentFromS3(key);
         } catch (Exception e) {
-            throw new RuntimeException("503: Ошибка при загрузке файла из S3");
+            throw new S3Exception("503: Ошибка при загрузке файла из S3");
         }
 
         String fileName = extractFileName(key);
