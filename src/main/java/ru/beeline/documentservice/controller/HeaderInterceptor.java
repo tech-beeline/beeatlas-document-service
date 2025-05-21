@@ -23,7 +23,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
 
             if (uri.contains("/swagger") ||
                     uri.contains("/error") ||
-                    uri.contains("/v2/api-docs") ||
+                    uri.contains("/v2/api-docs") || uri.contains("/documentations") ||
                     uri.contains("/versions") ||
                     Pattern.compile("/export/\\d+").matcher(uri).find() ||
                     (uri.contains("/documents") &&
