@@ -356,7 +356,7 @@ public class DocumentService {
 
         boolean isPublic = Boolean.TRUE.equals(document.getIsPublic());
         boolean isAdmin = userRoles != null && userRoles.contains("ADMINISTRATOR");
-        boolean isOwner = "user".equals(document.getSourceType()) && userId != null && userId.equals(document.getSourceId());
+        boolean isOwner = "USER".equals(document.getSourceType()) && userId != null && userId.equals(document.getSourceId());
 
         if (!isPublic && !isAdmin && !isOwner) {
             throw new ForbiddenException("403: Доступ запрещен");
