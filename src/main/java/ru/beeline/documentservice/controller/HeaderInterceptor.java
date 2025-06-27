@@ -22,8 +22,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
             String uri = request.getRequestURI();
 
             if (uri.contains("/swagger") ||
-                    uri.contains("/error") ||
-                    uri.contains("/v2/api-docs") || uri.contains("/documentations") ||
+                    uri.contains("/error") || uri.contains("/api-docs") || uri.contains("/documentations") ||
                     uri.contains("/versions") ||
                     Pattern.compile("/export/\\d+").matcher(uri).find() ||
                     (uri.contains("/documents") &&

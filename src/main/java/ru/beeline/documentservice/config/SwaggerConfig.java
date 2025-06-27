@@ -16,7 +16,7 @@ public class SwaggerConfig {
 
     @Bean
     public Docket api() {
-        return new Docket(DocumentationType.SWAGGER_2)
+        return new Docket(DocumentationType.OAS_30)
                 .apiInfo(getApiInfo())
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("ru.beeline.documentservice.controller"))
@@ -25,8 +25,7 @@ public class SwaggerConfig {
     }
 
     private ApiInfo getApiInfo() {
-        return new ApiInfo(
-                "Eafdmmart API",
+        return new ApiInfo("Document service API",
                 "API документация",
                 "1.0",
                 "Terms of service",
