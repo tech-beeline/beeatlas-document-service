@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.dto.DocumentExportDTO;
 import ru.beeline.documentservice.dto.DocumentImportDTO;
+import ru.beeline.documentservice.dto.DocumentVersionDTO;
 import ru.beeline.documentservice.service.DocumentService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -62,13 +63,36 @@ public class DocumentController {
     @ApiOperation(value = "Загрузка документов")
     public ResponseEntity<DocIdDTO> uploadExcelFile(@ApiParam(value = "File to upload", required = true) @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
+                                                    @RequestParam(value = "targetId", required = false) Integer targetId,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
-                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = false)
+                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = true)
                                                     @ApiParam(value = "Content-Disposition header") String contentDisposition,
                                                     @PathVariable(name = "path_name") String pathName,
                                                     @PathVariable(name = "doc_type") String docType) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
-                isPublic, pathName, docType, userId, contentDisposition));
+                                                                                              isPublic,
+                                                                                              pathName,
+                                                                                              docType,
+                                                                                              userId,
+                                                                                              contentDisposition,
+                                                                                              targetId));
+    }
+
+
+    @GetMapping("/documents/versions/{documentationsTypeId}/{targetId}")
+    public List<DocumentVersionDTO> getDocumentVersions(
+            @PathVariable("documentationsTypeId") Integer documentationTypeId,
+            @PathVariable("targetId") Integer targetId) {
+        return documentService.getDocumentVersions(documentationTypeId, targetId);
+    }
+
+
+    @GetMapping("/documents/{documentationTypeId}/{targetId}")
+    public ResponseEntity<byte[]> getDocumentByTypeAndTarget(@PathVariable Integer documentationTypeId,
+                                                             @PathVariable Integer targetId,
+                                                             @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
+                                                             @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles) {
+        return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId, userRoles);
     }
 
     @PatchMapping("/export/{doc_id}")
