@@ -31,9 +31,8 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,9 +91,9 @@ public class DocumentService {
     private byte[] downloadDocumentFromS3(String key) {
         try {
             InputStream inputStream = minioClient.getObject(GetObjectArgs.builder()
-                                                                    .bucket(bucketName)
-                                                                    .object(key)
-                                                                    .build());
+                    .bucket(bucketName)
+                    .object(key)
+                    .build());
             return inputStream.readAllBytes();
         } catch (Exception e) {
             throw new S3Exception("Ошибка при загрузке документа: " + e.getMessage());
@@ -116,11 +115,8 @@ public class DocumentService {
         }
     }
 
-    public DocIdDTO uploadFileAndStartProcess(MultipartFile file,
-                                              Boolean sync,
-                                              Integer userId,
-                                              String entityType,
-                                              HttpServletRequest request) {
+    public DocIdDTO uploadFileAndStartProcess(MultipartFile file, Boolean sync, Integer userId,
+                                              String entityType, HttpServletRequest request) {
         validateRequest(request);
         String fileName = request.getHeader("Content-Disposition");
         if (fileName.isEmpty()) {
@@ -144,13 +140,8 @@ public class DocumentService {
         }
     }
 
-    private Integer saveDocumentInfo(String fileName,
-                                     Integer sourceId,
-                                     String docType,
-                                     String sourceType,
-                                     Boolean isPublic,
-                                     DocumentationType documentationType,
-                                     Integer targetId) {
+    private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType, String sourceType,
+                                     Boolean isPublic, DocumentationType documentationType, Integer targetId) {
         S3Document document = new S3Document();
         document.setDocType(docType);
         document.setKey(fileName);
@@ -163,13 +154,8 @@ public class DocumentService {
         return documentRepository.save(document).getId();
     }
 
-    private Integer saveDocumentInfo(String fileName,
-                                     Integer sourceId,
-                                     String docType,
-                                     String sourceType,
-                                     Boolean isPublic,
-                                     String entityType,
-                                     String operationType) {
+    private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType, String sourceType,
+                                     Boolean isPublic, String entityType, String operationType) {
         S3Document document = new S3Document();
         document.setDocType(docType);
         document.setKey(fileName);
@@ -188,11 +174,11 @@ public class DocumentService {
         }
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(PutObjectArgs.builder()
-                                          .bucket(bucketName)
-                                          .object(fileName)
-                                          .stream(inputStream, file.getSize(), -1)
-                                          .contentType(file.getContentType())
-                                          .build());
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .stream(inputStream, file.getSize(), -1)
+                    .contentType(file.getContentType())
+                    .build());
             log.info("Файл успешно загружен: " + fileName);
         } catch (Exception e) {
             log.error("Не удалось загрузить файл", e);
@@ -200,36 +186,36 @@ public class DocumentService {
         }
     }
 
-    public DocIdDTO uploadExcelFile(MultipartFile file,
-                                    Boolean isPublic,
-                                    String pathName,
-                                    String docType,
-                                    Integer userId,
-                                    String contentDisposition,
-                                    Integer targetId) {
+    public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String pathName, String docType,
+                                    Integer userId, String contentDisposition, Integer targetId) {
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
             documentationType = documentationTypeRepository.findByFolder(pathName)
                     .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
-
             int lastDotIndex = contentDisposition.lastIndexOf(".");
             if (lastDotIndex == -1) {
                 throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
             }
-
             if (!contentDisposition.substring(lastDotIndex + 1).equals(documentationType.getDocType())) {
                 throw new ValidationException("Расширение не соответсвует типу документации");
             }
-
         } else {
             if (documentationTypeRepository.findByFolder(pathName).isPresent()) {
                 throw new ValidationException("Не передан id документируемой сущности");
             }
-
         }
         String fileName = contentDisposition;
         validationUploadExcelFile(contentDisposition, fileName);
         fileName = pathName + "/" + fileName;
+        if (documentRepository.existsByKey(fileName)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+            int lastDotIndex = fileName.lastIndexOf('.');
+            if (lastDotIndex != -1) {
+                String name = fileName.substring(0, lastDotIndex);
+                String extension = fileName.substring(lastDotIndex);
+                fileName = name + "_" + LocalDateTime.now().format(formatter) + extension;
+            }
+        }
         uploadFile(fileName, file);
         String sourceType = userId != null ? "USER" : "SYSTEM";
         return DocIdDTO.builder()
