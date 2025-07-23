@@ -12,6 +12,7 @@ public interface DocumentRepository extends JpaRepository<S3Document, Integer> {
 
     List<S3Document> findBySourceTypeAndSourceIdAndOperationTypeAndDeletedDateIsNull(String sourceType, Integer sourceId,
                                                                                      String operationType);
+
     @Query("SELECT d FROM S3Document d " +
             "WHERE d.documentationType.id = :documentationTypeId " +
             "AND d.targetEntityId = :targetId " +
@@ -23,4 +24,6 @@ public interface DocumentRepository extends JpaRepository<S3Document, Integer> {
 
     Optional<S3Document> findTopByDocumentationTypeIdAndTargetEntityIdOrderByCreatedDateDesc(Integer documentationTypeId,
                                                                                              Integer targetEntityId);
+
+    boolean existsByKey(String key);
 }
