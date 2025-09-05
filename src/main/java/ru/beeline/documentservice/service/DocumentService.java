@@ -214,6 +214,8 @@ public class DocumentService {
                 String name = fileName.substring(0, lastDotIndex);
                 String extension = fileName.substring(lastDotIndex);
                 fileName = name + "_" + LocalDateTime.now().format(formatter) + extension;
+            } else {
+                fileName = fileName + "_" + LocalDateTime.now().format(formatter);
             }
         }
         uploadFile(fileName, file);

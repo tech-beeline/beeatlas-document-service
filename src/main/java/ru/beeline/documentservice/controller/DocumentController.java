@@ -69,15 +69,9 @@ public class DocumentController {
                                                     @ApiParam(value = "Content-Disposition header") String contentDisposition,
                                                     @PathVariable(name = "path_name") String pathName,
                                                     @PathVariable(name = "doc_type") String docType) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file,
-                                                                                              isPublic,
-                                                                                              pathName,
-                                                                                              docType,
-                                                                                              userId,
-                                                                                              contentDisposition,
-                                                                                              targetId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file, isPublic, pathName,
+                docType, userId, contentDisposition, targetId));
     }
-
 
     @GetMapping("/documents/versions/{documentationsTypeId}/{targetId}")
     public List<DocumentVersionDTO> getDocumentVersions(
