@@ -209,13 +209,16 @@ public class DocumentService {
         fileName = pathName + "/" + fileName;
         if (documentRepository.existsByKey(fileName)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+            String timeStamp = LocalDateTime.now().format(formatter);
+            String millis = String.format("%03d", (System.currentTimeMillis() % 1000));
+            timeStamp += millis;
             int lastDotIndex = fileName.lastIndexOf('.');
             if (lastDotIndex != -1) {
                 String name = fileName.substring(0, lastDotIndex);
                 String extension = fileName.substring(lastDotIndex);
-                fileName = name + "_" + LocalDateTime.now().format(formatter) + extension;
+                fileName = name + "_" + timeStamp + extension;
             } else {
-                fileName = fileName + "_" + LocalDateTime.now().format(formatter);
+                fileName = fileName + "_" + timeStamp;
             }
         }
         uploadFile(fileName, file);
