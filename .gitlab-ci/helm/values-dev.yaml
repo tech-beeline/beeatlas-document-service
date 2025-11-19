@@ -10,6 +10,7 @@ env:
   AWS_S3_REGION: "yd-s3test-ceph04-hl-vimpelcom-ru"
   AWS_S3_ENDPOINT: "https://yd-s3test-ceph04-hl.vimpelcom.ru"
   AWS_S3_BUCKET_NAME: "arch-code-documents-dev"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "vault:eafdmmart/data/dev/fdm#opentelemetry"
 
 podAnnotations:
   vault.security.banzaicloud.io/vault-addr: "https://vault-test.vimpelcom.ru/"

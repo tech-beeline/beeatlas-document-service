@@ -10,6 +10,7 @@ env:
   AWS_S3_REGION: "yd-ceph7-sl-vimpelcom-ru"
   AWS_S3_ENDPOINT: "https://yd-ceph7-sl.vimpelcom.ru"
   AWS_S3_BUCKET_NAME: "eafdmmart-prod-doc"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "vault:eafdmmart/data/prod/fdm#opentelemetry"
 
 replicaCount: 2
 

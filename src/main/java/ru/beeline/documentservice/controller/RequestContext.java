@@ -1,6 +1,7 @@
 package ru.beeline.documentservice.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,6 +42,11 @@ public class RequestContext {
 
     public static List<Long> getUserProducts() {
         List<String> stringList = (List<String>) getHeaders().get(USER_PRODUCTS_IDS_HEADER);
+        boolean hasValidEntries = stringList.stream()
+                .anyMatch(s -> s != null && !s.trim().isEmpty());
+        if (!hasValidEntries) {
+            return Collections.emptyList();
+        }
         List<Long> longList = stringList.stream()
                 .map(Long::parseLong)
                 .collect(Collectors.toList());
