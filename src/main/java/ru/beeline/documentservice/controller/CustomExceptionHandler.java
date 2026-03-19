@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 PJSC VimpelCom
+ */
+
 package ru.beeline.documentservice.controller;
 
 import lombok.extern.slf4j.Slf4j;

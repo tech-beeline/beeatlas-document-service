@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 PJSC VimpelCom
+ */
+
 package ru.beeline.documentservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
