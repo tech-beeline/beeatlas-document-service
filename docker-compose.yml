@@ -1,0 +1,103 @@
+
+services:
+  document-service-postgres:
+    image: postgres:15-alpine
+    container_name: document-service-postgres
+    environment:
+      POSTGRES_DB: ${DOCUMENT_POSTGRES_DB:-document_service}
+      POSTGRES_USER: ${DOCUMENT_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${DOCUMENT_POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${DOCUMENT_SERVICE_POSTGRES_NODEPORT:-5433}:5432"
+    volumes:
+      - document-service-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DOCUMENT_POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beeatlas-network
+
+  document-service-minio:
+    image: minio/minio:latest
+    container_name: document-service-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${DOCUMENT_MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${DOCUMENT_MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${DOCUMENT_MINIO_API_PORT:-9000}:9000"
+      - "${DOCUMENT_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - document-service-minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beeatlas-network
+
+  document-service-minio-init:
+    image: minio/mc:latest
+    container_name: document-service-minio-init
+    depends_on:
+      document-service-minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://document-service-minio:9000 ${DOCUMENT_MINIO_ROOT_USER:-minioadmin} ${DOCUMENT_MINIO_ROOT_PASSWORD:-minioadmin} &&
+      mc mb --ignore-existing local/${DOCUMENT_MINIO_BUCKET_NAME:-document-service-documents}
+      "
+    restart: "no"
+    networks:
+      - beeatlas-network
+
+  document-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: document-service
+    depends_on:
+      document-service-postgres:
+        condition: service_healthy
+      document-service-minio:
+        condition: service_healthy
+      document-service-minio-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DOCUMENT_POSTGRES_HOST:-document-service-postgres}:5432/${DOCUMENT_POSTGRES_DB:-document_service}
+      SPRING_DATASOURCE_USERNAME: ${DOCUMENT_POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DOCUMENT_POSTGRES_PASSWORD:-postgres}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: documents
+      SPRING_FLYWAY_DEFAULT_SCHEMA: documents
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_CLEAN_DISABLED: "true"
+      INTEGRATION_CAMUNDA_SERVER_URL: "http://camunda-service"
+      INTEGRATION_PACK_LOADER_SERVER_URL: "http://pack-loader-service"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector"
+      AWS_S3_REGION: ${DOCUMENT_MINIO_REGION:-us-east-1}
+      AWS_S3_ACCESS_KEY: ${DOCUMENT_MINIO_ROOT_USER:-minioadmin}
+      AWS_S3_SECRET_KEY: ${DOCUMENT_MINIO_ROOT_PASSWORD:-minioadmin}
+      AWS_S3_ENDPOINT: ${DOCUMENT_MINIO_ENDPOINT:-http://document-service-minio:9000}
+      AWS_S3_BUCKET_NAME: ${DOCUMENT_MINIO_BUCKET_NAME:-document-service-documents}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    ports:
+      - "${DOCUMENT_SERVICE_PORT:-8081}:8080"
+    networks:
+      - beeatlas-network
+    restart: unless-stopped
+
+networks:
+  beeatlas-network:
+    driver: bridge
+
+volumes:
+  document-service-postgres:
+  document-service-minio:
