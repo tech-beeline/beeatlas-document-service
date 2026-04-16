@@ -30,13 +30,11 @@ public class S3BucketUsageMetrics {
     private final AtomicLong quotaBytes;
     private final boolean enabled;
 
-    public S3BucketUsageMetrics(
-            MinioClient minioClient,
-            MeterRegistry registry,
-            @Value("${aws.s3.bucket.name}") String bucketName,
-            @Value("${aws.s3.bucket.quota-bytes:21474836480}") long quotaBytesConfig,
-            @Value("${aws.s3.bucket.usage.metrics.enabled:true}") boolean enabled
-    ) {
+    public S3BucketUsageMetrics(MinioClient minioClient,
+                                MeterRegistry registry,
+                                @Value("${aws.s3.bucket.name}") String bucketName,
+                                @Value("${aws.s3.bucket.quota-bytes:20474836480}") long quotaBytesConfig,
+                                @Value("${aws.s3.bucket.usage.metrics.enabled:true}") boolean enabled) {
         this.minioClient = minioClient;
         this.bucketName = bucketName;
         this.quotaBytes = new AtomicLong(Math.max(0L, quotaBytesConfig));
@@ -77,7 +75,10 @@ public class S3BucketUsageMetrics {
             }
             usedBytes.set(total);
             double totalGB = total / (1024.0 * 1024.0 * 1024.0);
-            log.info("Объем занятого места в S3: {} байт ({} GB).", total, totalGB);
+            long bucketLimitBytes = quotaBytes.get();
+            double percentUsed = (total * 100.0) / bucketLimitBytes;
+            log.info("Объем занятого места в S3: {} байт ({} GB). Занято {}% от лимита ({} GB).",
+                    total, totalGB, String.format("%.2f", percentUsed), bucketLimitBytes / (1024.0 * 1024.0 * 1024.0));
         } catch (Exception e) {
             log.warn("S3 bucket usage poll failed for bucket {}: {}", bucketName, e.getMessage());
         }
