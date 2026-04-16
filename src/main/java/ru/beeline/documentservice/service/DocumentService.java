@@ -30,7 +30,7 @@ import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 import ru.beeline.documentservice.repository.DocumentationTypeRepository;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -381,4 +381,5 @@ public class DocumentService {
         return idx >= 0 ? key.substring(idx + 1) : key;
     }
 }
+
 
