@@ -7,6 +7,9 @@ package ru.beeline.documentservice.service;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectsArgs;
+import io.minio.messages.DeleteObject;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +33,6 @@ import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 import ru.beeline.documentservice.repository.DocumentationTypeRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -364,9 +366,7 @@ public class DocumentService {
         } catch (Exception e) {
             throw new S3Exception("503: Ошибка при загрузке файла из S3");
         }
-
         String fileName = extractFileName(key);
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(fileBytes.length);
@@ -379,6 +379,36 @@ public class DocumentService {
     private String extractFileName(String key) {
         int idx = key.lastIndexOf('/');
         return idx >= 0 ? key.substring(idx + 1) : key;
+    }
+
+    public void deleteDocuments() {
+        log.info("Старт метода отчистки хранилища s3");
+        List<S3Document> documents = documentRepository.findAllNotDocumentation();
+        List<String> s3keys = documents.stream().map(S3Document::getKey).filter(Objects::nonNull).toList();
+        deleteMultipleDocumentsFromS3(s3keys);
+        documents.forEach(s3Document -> s3Document.setDeletedDate(LocalDateTime.now()));
+        documentRepository.saveAll(documents);
+        log.info("метод отчистки s3 завершен");
+    }
+
+    private void deleteMultipleDocumentsFromS3(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+        try {
+            List<DeleteObject> objects = keys.stream()
+                    .map(DeleteObject::new)
+                    .collect(Collectors.toList());
+            minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .objects(objects)
+                            .build()
+            );
+            log.info("Успешное удаление файлов из s3");
+        } catch (Exception e) {
+            log.error("Ошибка при массовом удалении из S3: {}", e.getMessage());
+        }
     }
 }
 

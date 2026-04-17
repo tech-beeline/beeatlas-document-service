@@ -4,9 +4,9 @@
 
 package ru.beeline.documentservice.domain;
 
+import jakarta.persistence.*;
 import lombok.*;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -58,4 +58,7 @@ public class S3Document {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "documentation_type_id")
     private DocumentationType documentationType;
+
+    @Column(name = "ttl")
+    private Integer ttl;
 }
