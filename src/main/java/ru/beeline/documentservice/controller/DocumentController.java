@@ -118,6 +118,13 @@ public class DocumentController {
                                                                     @RequestHeader(value = USER_ID_HEADER) Integer userId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.asynchronousDocumentLoading(entityType, userId));
     }
+
+    @DeleteMapping("/documents")
+    @Operation(summary = "Удаление устаревших документов")
+    public ResponseEntity<Void> deleteDocuments (){
+        documentService.deleteDocuments();
+        return new  ResponseEntity<>(HttpStatus.OK);
+    }
 }
 
 
