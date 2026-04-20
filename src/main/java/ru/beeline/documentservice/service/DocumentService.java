@@ -151,7 +151,7 @@ public class DocumentService {
     }
 
     private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType, String sourceType,
-                                     Boolean isPublic, DocumentationType documentationType, Integer targetId) {
+                                     Boolean isPublic, DocumentationType documentationType, Integer targetId, Integer ttl) {
         S3Document document = new S3Document();
         document.setDocType(docType);
         document.setKey(fileName);
@@ -161,6 +161,7 @@ public class DocumentService {
         document.setCreatedDate(LocalDateTime.now());
         document.setDocumentationType(documentationType);
         document.setTargetEntityId(targetId);
+        document.setTtl(ttl == null ? 60 : ttl);
         return documentRepository.save(document).getId();
     }
 
@@ -197,7 +198,7 @@ public class DocumentService {
     }
 
     public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String pathName, String docType,
-                                    Integer userId, String contentDisposition, Integer targetId) {
+                                    Integer userId, String contentDisposition, Integer targetId, Integer ttl) {
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
             documentationType = documentationTypeRepository.findByFolder(pathName)
@@ -234,7 +235,7 @@ public class DocumentService {
         uploadFile(fileName, file);
         String sourceType = userId != null ? "USER" : "SYSTEM";
         return DocIdDTO.builder()
-                .docId(saveDocumentInfo(fileName, userId, docType, sourceType, isPublic, documentationType, targetId))
+                .docId(saveDocumentInfo(fileName, userId, docType, sourceType, isPublic, documentationType, targetId, ttl))
                 .build();
     }
 
