@@ -74,6 +74,7 @@ public class DocumentController {
                                                     @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
                                                     @RequestParam(value = "targetId", required = false) Integer targetId,
+                                                    @RequestParam(value = "ttl", required = false) Integer ttl,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
                                                     @Parameter(description = "Имя файла (Content-Disposition)", required = true)
                                                     @RequestHeader(value = CONTENT_DISPOSITION, required = true)
@@ -81,7 +82,7 @@ public class DocumentController {
                                                     @PathVariable(name = "path_name") String pathName,
                                                     @PathVariable(name = "doc_type") String docType) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file, isPublic, pathName,
-                docType, userId, contentDisposition, targetId));
+                docType, userId, contentDisposition, targetId, ttl));
     }
 
     @GetMapping("/documents/versions/{documentationsTypeId}/{targetId}")
