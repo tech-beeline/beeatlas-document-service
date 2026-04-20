@@ -77,6 +77,9 @@ public class DocumentService {
             throw new NotFoundException("404: Запись с данным id не найдена");
         }
         S3Document document = optionalS3Document.get();
+        if (document.getDeletedDate() != null) {
+            throw new NotFoundException("Документ удален.");
+        }
         String key = document.getKey();
         byte[] result;
         if (document.getIsPublic() || (userRoles != null && userRoles.contains("ADMINISTRATOR")) || (document.getSourceType()
