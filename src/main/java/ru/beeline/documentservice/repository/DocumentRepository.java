@@ -31,8 +31,12 @@ public interface DocumentRepository extends JpaRepository<S3Document, Integer> {
 
     boolean existsByKey(String key);
 
-    @Query("SELECT d FROM S3Document d" +
-            " WHERE d.ttl != 0 AND d.deletedDate IS NULL" +
-            " AND (CURRENT_DATE - CAST(d.createdDate AS date)) > d.ttl")
+    @Query(value = """
+            select *
+            from documents.s3_doc d
+            where d.ttl <> 0
+              and d.deleted_date is null
+              and (current_date - d.created_date::date) > d.ttl
+            """, nativeQuery = true)
     List<S3Document> findAllNotDocumentation();
 }
