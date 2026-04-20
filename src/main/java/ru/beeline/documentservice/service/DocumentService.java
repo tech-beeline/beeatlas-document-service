@@ -4,10 +4,8 @@
 
 package ru.beeline.documentservice.service;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectsArgs;
+import io.minio.*;
+import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -400,16 +398,23 @@ public class DocumentService {
             return;
         }
         try {
-            List<DeleteObject> objects = keys.stream()
-                    .map(DeleteObject::new)
-                    .collect(Collectors.toList());
-            minioClient.removeObjects(
+            List<DeleteObject> objects = new ArrayList<>();
+            for (String key : keys) {
+                objects.add(new DeleteObject(key));
+            }
+            Iterable<Result<DeleteError>> results = minioClient.removeObjects(
                     RemoveObjectsArgs.builder()
                             .bucket(bucketName)
                             .objects(objects)
                             .build()
             );
-            log.info("Успешное удаление файлов из s3");
+            for (Result<DeleteError> result : results) {
+                DeleteError error = result.get();
+                if (error != null) {
+                    log.error("Не удалось удалить объект '{}': {}", error.objectName(), error.message());
+                }
+            }
+            log.info("Запрос на массовое удаление файлов из S3 отправлен");
         } catch (Exception e) {
             log.error("Ошибка при массовом удалении из S3: {}", e.getMessage());
         }
