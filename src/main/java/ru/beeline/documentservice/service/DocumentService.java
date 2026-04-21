@@ -4,9 +4,10 @@
 
 package ru.beeline.documentservice.service;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,6 @@ import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 import ru.beeline.documentservice.repository.DocumentationTypeRepository;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -75,6 +75,9 @@ public class DocumentService {
             throw new NotFoundException("404: Запись с данным id не найдена");
         }
         S3Document document = optionalS3Document.get();
+        if (document.getDeletedDate() != null) {
+            throw new NotFoundException("Документ удален.");
+        }
         String key = document.getKey();
         byte[] result;
         if (document.getIsPublic() || (userRoles != null && userRoles.contains("ADMINISTRATOR")) || (document.getSourceType()
@@ -146,8 +149,15 @@ public class DocumentService {
     }
 
     private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType, String sourceType,
-                                     Boolean isPublic, DocumentationType documentationType, Integer targetId) {
+                                     Boolean isPublic, DocumentationType documentationType, Integer targetId, Integer ttl) {
         S3Document document = new S3Document();
+        if (ttl != null) {
+            document.setTtl(ttl);
+        } else if (documentationType != null && targetId != null) {
+            document.setTtl(0);
+        } else {
+            document.setTtl(60);
+        }
         document.setDocType(docType);
         document.setKey(fileName);
         document.setSourceType(sourceType);
@@ -192,7 +202,7 @@ public class DocumentService {
     }
 
     public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String pathName, String docType,
-                                    Integer userId, String contentDisposition, Integer targetId) {
+                                    Integer userId, String contentDisposition, Integer targetId, Integer ttl) {
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
             documentationType = documentationTypeRepository.findByFolder(pathName)
@@ -229,7 +239,7 @@ public class DocumentService {
         uploadFile(fileName, file);
         String sourceType = userId != null ? "USER" : "SYSTEM";
         return DocIdDTO.builder()
-                .docId(saveDocumentInfo(fileName, userId, docType, sourceType, isPublic, documentationType, targetId))
+                .docId(saveDocumentInfo(fileName, userId, docType, sourceType, isPublic, documentationType, targetId, ttl))
                 .build();
     }
 
@@ -364,9 +374,7 @@ public class DocumentService {
         } catch (Exception e) {
             throw new S3Exception("503: Ошибка при загрузке файла из S3");
         }
-
         String fileName = extractFileName(key);
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(fileBytes.length);
@@ -380,5 +388,43 @@ public class DocumentService {
         int idx = key.lastIndexOf('/');
         return idx >= 0 ? key.substring(idx + 1) : key;
     }
+
+    public void deleteDocuments() {
+        log.info("Старт метода отчистки хранилища s3");
+        List<S3Document> documents = documentRepository.findAllNotDocumentation();
+        List<String> s3keys = documents.stream().map(S3Document::getKey).filter(Objects::nonNull).toList();
+        deleteMultipleDocumentsFromS3(s3keys);
+        documents.forEach(s3Document -> s3Document.setDeletedDate(LocalDateTime.now()));
+        documentRepository.saveAll(documents);
+        log.info("метод отчистки s3 завершен");
+    }
+
+    private void deleteMultipleDocumentsFromS3(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+        try {
+            List<DeleteObject> objects = new ArrayList<>();
+            for (String key : keys) {
+                objects.add(new DeleteObject(key));
+            }
+            Iterable<Result<DeleteError>> results = minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .objects(objects)
+                            .build()
+            );
+            for (Result<DeleteError> result : results) {
+                DeleteError error = result.get();
+                if (error != null) {
+                    log.error("Не удалось удалить объект '{}': {}", error.objectName(), error.message());
+                }
+            }
+            log.info("Запрос на массовое удаление файлов из S3 отправлен");
+        } catch (Exception e) {
+            log.error("Ошибка при массовом удалении из S3: {}", e.getMessage());
+        }
+    }
 }
+
 
