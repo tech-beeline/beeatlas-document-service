@@ -151,6 +151,13 @@ public class DocumentService {
     private Integer saveDocumentInfo(String fileName, Integer sourceId, String docType, String sourceType,
                                      Boolean isPublic, DocumentationType documentationType, Integer targetId, Integer ttl) {
         S3Document document = new S3Document();
+        if (ttl != null) {
+            document.setTtl(ttl);
+        } else if (documentationType != null && targetId != null) {
+            document.setTtl(0);
+        } else {
+            document.setTtl(60);
+        }
         document.setDocType(docType);
         document.setKey(fileName);
         document.setSourceType(sourceType);
