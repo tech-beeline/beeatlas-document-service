@@ -166,7 +166,6 @@ public class DocumentService {
         document.setCreatedDate(LocalDateTime.now());
         document.setDocumentationType(documentationType);
         document.setTargetEntityId(targetId);
-        document.setTtl(ttl);
         return documentRepository.save(document).getId();
     }
 
