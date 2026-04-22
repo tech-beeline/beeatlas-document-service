@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.HandlerInterceptor;
 import ru.beeline.documentservice.exception.ForbiddenException;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,8 +28,8 @@ public class HeaderInterceptor implements HandlerInterceptor {
             if (uri.contains("/swagger") ||
                     uri.contains("/error") || uri.contains("/api-docs") || uri.contains("/documentations") ||
                     uri.contains("/versions") ||
-                    Pattern.compile("/export/\\d+").matcher(uri).find() ||
-                    (uri.contains("/documents") &&
+                    Pattern.compile("/export/\\d+").matcher(uri).find() || ((uri.startsWith("/api/v1/documents") || uri.startsWith(
+                    "/api/v2/documents")) &&
                             !uri.equals("/api/v1/documents/import") &&
                             !uri.equals("/api/v1/documents/export"))
             ) {

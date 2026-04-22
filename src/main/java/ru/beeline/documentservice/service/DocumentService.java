@@ -7,7 +7,6 @@ package ru.beeline.documentservice.service;
 import io.minio.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +30,9 @@ import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 import ru.beeline.documentservice.repository.DocumentationTypeRepository;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -40,6 +41,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.net.URLConnection;
 
 @Slf4j
 @Service
@@ -75,9 +77,6 @@ public class DocumentService {
             throw new NotFoundException("404: Запись с данным id не найдена");
         }
         S3Document document = optionalS3Document.get();
-        if (document.getDeletedDate() != null) {
-            throw new NotFoundException("Документ удален.");
-        }
         String key = document.getKey();
         byte[] result;
         if (document.getIsPublic() || (userRoles != null && userRoles.contains("ADMINISTRATOR")) || (document.getSourceType()
@@ -201,6 +200,105 @@ public class DocumentService {
         }
     }
 
+    public void uploadBytes(String fileName, byte[] bytes, String contentType) {
+        if (bytes == null || bytes.length == 0) {
+            throw new ValidationException("Файл отсутствует или пуст");
+        }
+        try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
+            minioClient.putObject(PutObjectArgs.builder()
+                                          .bucket(bucketName)
+                                          .object(fileName)
+                                          .stream(inputStream, bytes.length, -1)
+                                          .contentType(contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                                          .build());
+            log.info("Файл успешно загружен: {}", fileName);
+        } catch (Exception e) {
+            log.error("Не удалось загрузить файл", e);
+            throw new S3Exception("Не удалось загрузить файл в S3");
+        }
+    }
+
+    public DocIdDTO uploadBinaryFile(byte[] bytes,
+                                     Boolean isPublic,
+                                     String pathName,
+                                     String docType,
+                                     Integer userId,
+                                     String fileName,
+                                     Integer targetId,
+                                     String requestContentType) {
+        if (fileName == null) {
+            throw new ValidationException("Не передан обязательный query-параметр fileName");
+        }
+        String decodedFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+        if (decodedFileName.isBlank()) {
+            throw new ValidationException("Пустой fileName");
+        }
+
+        String extension = extractExtensionOrThrow(decodedFileName, "fileName");
+
+        DocumentationType documentationType = null;
+        if (Objects.nonNull(targetId)) {
+            documentationType = documentationTypeRepository.findByFolder(pathName)
+                    .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
+
+            if (!extension.equalsIgnoreCase(documentationType.getDocType())) {
+                throw new ValidationException("Расширение не соответсвует типу документации");
+            }
+            if (docType == null || !docType.equalsIgnoreCase(documentationType.getDocType())) {
+                throw new ValidationException("doc_type не соответствует зарегистрированному типу документации");
+            }
+        } else {
+            if (documentationTypeRepository.findByFolder(pathName).isPresent()) {
+                throw new ValidationException("Не передан id документируемой сущности");
+            }
+            if (docType == null || !docType.equalsIgnoreCase(extension)) {
+                throw new ValidationException("doc_type не соответствует расширению файла");
+            }
+        }
+
+        String objectKey = pathName + "/" + decodedFileName;
+        if (documentRepository.existsByKey(objectKey)) {
+            objectKey = withTimestampSuffix(objectKey);
+        }
+
+        String contentType = requestContentType != null ? requestContentType : URLConnection.guessContentTypeFromName(
+                decodedFileName);
+        uploadBytes(objectKey, bytes, contentType);
+
+        String sourceType = userId != null ? "USER" : "SYSTEM";
+        return DocIdDTO.builder()
+                .docId(saveDocumentInfo(objectKey,
+                                        userId,
+                                        docType,
+                                        sourceType,
+                                        isPublic,
+                                        documentationType.getDocType(),
+                                        documentationType.getTargetEntityType()))
+                .build();
+    }
+
+    private String extractExtensionOrThrow(String fileName, String fieldName) {
+        int lastDotIndex = fileName.lastIndexOf(".");
+        if (lastDotIndex == -1 || lastDotIndex == fileName.length() - 1) {
+            throw new ValidationException(fieldName + " не соответствует формату имени файла с расширением");
+        }
+        return fileName.substring(lastDotIndex + 1);
+    }
+
+    private String withTimestampSuffix(String fileName) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String timeStamp = LocalDateTime.now().format(formatter);
+        String millis = String.format("%03d", (System.currentTimeMillis() % 1000));
+        timeStamp += millis;
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex != -1) {
+            String name = fileName.substring(0, lastDotIndex);
+            String extension = fileName.substring(lastDotIndex);
+            return name + "_" + timeStamp + extension;
+        }
+        return fileName + "_" + timeStamp;
+    }
+
     public DocIdDTO uploadExcelFile(MultipartFile file, Boolean isPublic, String pathName, String docType,
                                     Integer userId, String contentDisposition, Integer targetId, Integer ttl) {
         DocumentationType documentationType = null;
@@ -239,7 +337,13 @@ public class DocumentService {
         uploadFile(fileName, file);
         String sourceType = userId != null ? "USER" : "SYSTEM";
         return DocIdDTO.builder()
-                .docId(saveDocumentInfo(fileName, userId, docType, sourceType, isPublic, documentationType, targetId, ttl))
+                .docId(saveDocumentInfo(fileName,
+                                        userId,
+                                        docType,
+                                        sourceType,
+                                        isPublic,
+                                        documentationType.getDocType(),
+                                        documentationType.getTargetEntityType()))
                 .build();
     }
 
@@ -374,7 +478,9 @@ public class DocumentService {
         } catch (Exception e) {
             throw new S3Exception("503: Ошибка при загрузке файла из S3");
         }
+
         String fileName = extractFileName(key);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(fileBytes.length);
@@ -426,5 +532,4 @@ public class DocumentService {
         }
     }
 }
-
 
