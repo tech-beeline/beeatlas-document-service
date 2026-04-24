@@ -36,7 +36,7 @@ public interface DocumentRepository extends JpaRepository<S3Document, Integer> {
             from documents.s3_doc d
             where d.ttl <> 0
               and d.deleted_date is null
-              and (current_date - d.created_date::date) > d.ttl
+              and extract(day from current_date - d.created_date) > d.ttl
             """, nativeQuery = true)
     List<S3Document> findAllNotDocumentation();
 }

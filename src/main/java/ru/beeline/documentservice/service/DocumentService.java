@@ -341,9 +341,7 @@ public class DocumentService {
                                         userId,
                                         docType,
                                         sourceType,
-                                        isPublic,
-                                        documentationType.getDocType(),
-                                        documentationType.getTargetEntityType()))
+                                        isPublic, documentationType, targetId, ttl))
                 .build();
     }
 
