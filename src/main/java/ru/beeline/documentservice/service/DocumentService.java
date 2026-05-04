@@ -248,9 +248,9 @@ public class DocumentService {
                 throw new ValidationException("doc_type не соответствует зарегистрированному типу документации");
             }
         } else {
-            if (documentationTypeRepository.findByFolder(pathName).isEmpty()) {
-                throw new ValidationException("Не передан id документируемой сущности");
-            }
+            documentationType = documentationTypeRepository.findByFolder(pathName)
+                    .orElseThrow(() -> new ValidationException("Не передан id документируемой сущности"));
+
             if (docType == null || !docType.equalsIgnoreCase(extension)) {
                 throw new ValidationException("doc_type не соответствует расширению файла");
             }
