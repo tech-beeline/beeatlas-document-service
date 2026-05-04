@@ -313,7 +313,7 @@ public class DocumentService {
                 throw new ValidationException("Расширение не соответсвует типу документации");
             }
         } else {
-            if (documentationTypeRepository.findByFolder(pathName).isPresent()) {
+            if (documentationTypeRepository.findByFolder(pathName).isEmpty()) {
                 throw new ValidationException("Не передан id документируемой сущности");
             }
         }
