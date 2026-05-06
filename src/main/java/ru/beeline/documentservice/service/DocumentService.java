@@ -182,6 +182,24 @@ public class DocumentService {
         return documentRepository.save(document).getId();
     }
 
+    private Integer saveDocumentInfo(String fileName,
+                                     Integer sourceId,
+                                     String docType,
+                                     String sourceType,
+                                     Boolean isPublic,
+                                     DocumentationType documentationType,
+                                     Integer targetId) {
+        S3Document document = new S3Document();
+        document.setDocType(docType);
+        document.setKey(fileName);
+        document.setSourceType(sourceType);
+        document.setSourceId(sourceId);
+        document.setIsPublic(isPublic);
+        document.setDocumentationType(documentationType);
+        document.setCreatedDate(LocalDateTime.now());
+        document.setTargetEntityId(targetId);
+        return documentRepository.save(document).getId();
+    }
     public void uploadFile(String fileName, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ValidationException("Файл отсутствует или пуст");
@@ -238,21 +256,18 @@ public class DocumentService {
 
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
-            documentationType = documentationTypeRepository.findByFolder(pathName)
-                    .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
+            documentationType = documentationTypeRepository.findByFolder(pathName).get();
+            if (Objects.nonNull(documentationType)) {
 
-            if (!extension.equalsIgnoreCase(documentationType.getDocType())) {
-                throw new ValidationException("Расширение не соответсвует типу документации");
-            }
-            if (docType == null || !docType.equalsIgnoreCase(documentationType.getDocType())) {
-                throw new ValidationException("doc_type не соответствует зарегистрированному типу документации");
-            }
-        } else {
-            documentationType = documentationTypeRepository.findByFolder(pathName)
-                    .orElseThrow(() -> new ValidationException("Не передан id документируемой сущности"));
 
-            if (docType == null || !docType.equalsIgnoreCase(extension)) {
-                throw new ValidationException("doc_type не соответствует расширению файла");
+                if (!extension.equalsIgnoreCase(documentationType.getDocType())) {
+                    throw new ValidationException("Расширение не соответсвует типу документации");
+                }
+                if (docType == null || !docType.equalsIgnoreCase(documentationType.getDocType())) {
+                    throw new ValidationException("doc_type не соответствует зарегистрированному типу документации");
+                }
+            } else {
+                targetId = null;
             }
         }
 
@@ -271,9 +286,7 @@ public class DocumentService {
                                         userId,
                                         docType,
                                         sourceType,
-                                        isPublic,
-                                        documentationType.getDocType(),
-                                        documentationType.getTargetEntityType()))
+                                        isPublic, documentationType, targetId))
                 .build();
     }
 
@@ -303,18 +316,18 @@ public class DocumentService {
                                     Integer userId, String contentDisposition, Integer targetId, Integer ttl) {
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
-            documentationType = documentationTypeRepository.findByFolder(pathName)
-                    .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
-            int lastDotIndex = contentDisposition.lastIndexOf(".");
-            if (lastDotIndex == -1) {
-                throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
-            }
-            if (!contentDisposition.substring(lastDotIndex + 1).equals(documentationType.getDocType())) {
-                throw new ValidationException("Расширение не соответсвует типу документации");
-            }
-        } else {
-            if (documentationTypeRepository.findByFolder(pathName).isEmpty()) {
-                throw new ValidationException("Не передан id документируемой сущности");
+            documentationType = documentationTypeRepository.findByFolder(pathName).get();
+            if (Objects.nonNull(documentationType)) {
+
+                int lastDotIndex = contentDisposition.lastIndexOf(".");
+                if (lastDotIndex == -1) {
+                    throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
+                }
+                if (!contentDisposition.substring(lastDotIndex + 1).equals(documentationType.getDocType())) {
+                    throw new ValidationException("Расширение не соответсвует типу документации");
+                }
+            } else {
+                targetId = null;
             }
         }
         String fileName = URLDecoder.decode(contentDisposition, StandardCharsets.UTF_8);
