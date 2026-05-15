@@ -97,12 +97,6 @@ public class DocumentController {
         return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId, userRoles);
     }
 
-    @GetMapping("/yo")
-    @Operation(summary = "Получение последней версии документа по типу и targetId")
-    public ResponseEntity<String> ge() {
-        return documentService.ge();
-    }
-
     @PatchMapping("/export/{doc_id}")
     @Operation(summary = "Дозагрузка (reload) документа по docId")
     public ResponseEntity patchCapabilityMap(@PathVariable(name = "doc_id") Integer docId,
