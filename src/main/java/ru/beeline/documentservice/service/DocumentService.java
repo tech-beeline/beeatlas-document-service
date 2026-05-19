@@ -257,10 +257,9 @@ public class DocumentService {
 
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
-            documentationType = documentationTypeRepository.findByFolder(pathName).get();
-            if (Objects.nonNull(documentationType)) {
-
-
+            Optional<DocumentationType> documentationTypeOptional = documentationTypeRepository.findByFolder(pathName);
+            if (documentationTypeOptional.isPresent()) {
+                documentationType = documentationTypeOptional.get();
                 if (!extension.equalsIgnoreCase(documentationType.getDocType())) {
                     throw new ValidationException("Расширение не соответсвует типу документации");
                 }
@@ -317,9 +316,9 @@ public class DocumentService {
                                     Integer userId, String contentDisposition, Integer targetId, Integer ttl) {
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
-            documentationType = documentationTypeRepository.findByFolder(pathName).get();
-            if (Objects.nonNull(documentationType)) {
-
+            Optional<DocumentationType> documentationTypeOptional = documentationTypeRepository.findByFolder(pathName);
+            if (documentationTypeOptional.isPresent()) {
+                documentationType = documentationTypeOptional.get();
                 int lastDotIndex = contentDisposition.lastIndexOf(".");
                 if (lastDotIndex == -1) {
                     throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
