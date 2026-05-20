@@ -40,6 +40,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.net.URLConnection;
@@ -257,18 +259,18 @@ public class DocumentService {
 
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
-            Optional<DocumentationType> documentationTypeOptional = documentationTypeRepository.findByFolder(pathName);
-            if (documentationTypeOptional.isPresent()) {
-                documentationType = documentationTypeOptional.get();
-                if (!extension.equalsIgnoreCase(documentationType.getDocType())) {
-                    throw new ValidationException("Расширение не соответсвует типу документации");
-                }
-                if (docType == null || !docType.equalsIgnoreCase(documentationType.getDocType())) {
-                    throw new ValidationException("doc_type не соответствует зарегистрированному типу документации");
-                }
-            } else {
-                targetId = null;
+            documentationType = documentationTypeRepository.findByFolder(pathName)
+                    .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
+
+            if (!extension.equalsIgnoreCase(documentationType.getDocType())) {
+                throw new ValidationException("Расширение не соответсвует типу документации");
             }
+
+        } else {
+            if (documentationTypeRepository.findByFolder(pathName).isPresent()) {
+                throw new ValidationException("Не передан id документируемой сущности");
+            }
+
         }
 
         String objectKey = pathName + "/" + decodedFileName;
@@ -316,20 +318,22 @@ public class DocumentService {
                                     Integer userId, String contentDisposition, Integer targetId, Integer ttl) {
         DocumentationType documentationType = null;
         if (Objects.nonNull(targetId)) {
-            Optional<DocumentationType> documentationTypeOptional = documentationTypeRepository.findByFolder(pathName);
-            if (documentationTypeOptional.isPresent()) {
-                documentationType = documentationTypeOptional.get();
-                int lastDotIndex = contentDisposition.lastIndexOf(".");
-                if (lastDotIndex == -1) {
-                    throw new ValidationException("contentDisposition не соответсвует формату имени файла с расширением");
-                }
-                if (!contentDisposition.substring(lastDotIndex + 1).equals(documentationType.getDocType())) {
-                    throw new ValidationException("Расширение не соответсвует типу документации");
-                }
-            } else {
-                targetId = null;
+            documentationType = documentationTypeRepository.findByFolder(pathName)
+                    .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
+
+            Pattern pattern = Pattern.compile("filename=\"[^\"]*\\.([^\"]+)\"");
+            Matcher matcher = pattern.matcher(contentDisposition);
+            if (!matcher.group(1).equals(documentationType.getDocType())) {
+                throw new ValidationException("Расширение не соответсвует типу документации");
             }
+
+        } else {
+            if (documentationTypeRepository.findByFolder(pathName).isPresent()) {
+                throw new ValidationException("Не передан id документируемой сущности");
+            }
+
         }
+
         String fileName = URLDecoder.decode(contentDisposition, StandardCharsets.UTF_8);
         validationUploadExcelFile(contentDisposition, fileName);
         fileName = pathName + "/" + fileName;
