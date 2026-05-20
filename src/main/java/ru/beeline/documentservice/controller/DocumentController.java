@@ -6,13 +6,8 @@ package ru.beeline.documentservice.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,11 +17,13 @@ import ru.beeline.documentservice.dto.DocumentImportDTO;
 import ru.beeline.documentservice.dto.DocumentVersionDTO;
 import ru.beeline.documentservice.service.DocumentService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static ru.beeline.documentservice.utils.Constants.*;
+import static ru.beeline.documentservice.utils.Constants.CONTENT_DISPOSITION;
+import static ru.beeline.documentservice.utils.Constants.USER_ID_HEADER;
+import static ru.beeline.documentservice.utils.Constants.USER_ROLES_HEADER;
 
-@Tag(name = "Documents", description = "Операции с документами и их версиями")
 @RestController
 @RequestMapping("/api/v1")
 public class DocumentController {
@@ -68,17 +65,14 @@ public class DocumentController {
                 sync, userId, entityType, request));
     }
 
-    @PostMapping(value = "/documents/{path_name}/{doc_type}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/documents/{path_name}/{doc_type}")
     @Operation(summary = "Загрузка документа в S3 и сохранение метаданных")
-    public ResponseEntity<DocIdDTO> uploadExcelFile(
-                                                    @RequestPart("file") MultipartFile file,
+    public ResponseEntity<DocIdDTO> uploadExcelFile(@Parameter(description = "File to upload", required = true) @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
                                                     @RequestParam(value = "targetId", required = false) Integer targetId,
                                                     @RequestParam(value = "ttl", required = false) Integer ttl,
                                                     @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
-                                                    @Parameter(description = "Имя файла (Content-Disposition)", required = true)
-                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = true)
-                                                    String contentDisposition,
+                                                    @RequestHeader(value = CONTENT_DISPOSITION, required = true) @Parameter(description = "Content-Disposition header") String contentDisposition,
                                                     @PathVariable(name = "path_name") String pathName,
                                                     @PathVariable(name = "doc_type") String docType) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.uploadExcelFile(file, isPublic, pathName,
@@ -107,8 +101,7 @@ public class DocumentController {
     @Operation(summary = "Дозагрузка (reload) документа по docId")
     public ResponseEntity patchCapabilityMap(@PathVariable(name = "doc_id") Integer docId,
                                              @RequestPart("file") MultipartFile file,
-                                             @RequestHeader(value = CONTENT_DISPOSITION, required = false)
-                                             String contentDisposition) {
+                                             @RequestHeader(value = CONTENT_DISPOSITION, required = false) @Parameter(description = "Content-Disposition header") String contentDisposition) {
         documentService.documentReloading(docId, file, contentDisposition);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -127,8 +120,5 @@ public class DocumentController {
         return new  ResponseEntity<>(HttpStatus.OK);
     }
 }
-
-
-
 
 
