@@ -321,10 +321,10 @@ public class DocumentService {
             documentationType = documentationTypeRepository.findByFolder(pathName)
                     .orElseThrow(() -> new ValidationException("Неизвестный тип документации"));
 
-            Pattern pattern = Pattern.compile("filename=\"[^\"]*\\.([^\"]+)\"");
-            Matcher matcher = pattern.matcher(contentDisposition);
-            if (!matcher.find() || !matcher.group(1).equals(documentationType.getDocType())) {
-                throw new ValidationException("Расширение не соответсвует типу документации");
+            String decodedName = URLDecoder.decode(contentDisposition, StandardCharsets.UTF_8);
+            String ext = extractExtensionOrThrow(decodedName, "Имя файла");
+            if (!ext.equals(documentationType.getDocType())) {
+                throw new ValidationException("Расширение не соответствует типу документации");
             }
 
         } else {
