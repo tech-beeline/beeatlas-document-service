@@ -25,7 +25,7 @@ import static ru.beeline.documentservice.utils.Constants.*;
 
 @RestController
 @RequestMapping("/api/v1")
-@Tag(name = "Documents", description = "Операции с документами и их версиями")
+@Tag(name = "Документы (API v1)", description = "Операции с документами, версиями, импортом и экспортом")
 public class DocumentController {
 
     @Autowired

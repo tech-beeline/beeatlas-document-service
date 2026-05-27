@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/documentations")
-@Tag(name = "Documentation types", description = "Справочник типов документации")
+@Tag(name = "Типы документации", description = "Справочник типов документации по сущностям")
 public class DocumentationTypeController {
 
     @Autowired
