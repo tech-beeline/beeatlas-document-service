@@ -9,10 +9,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
@@ -28,8 +28,8 @@ public class TraceIdResponseFilter implements Filter {
             SpanContext spanContext = Span.current().getSpanContext();
             if (spanContext.isValid()) {
                 propagator.inject(io.opentelemetry.context.Context.current(),
-                                  httpServletResponse,
-                                  new HttpServletResponseSetter());
+                        httpServletResponse,
+                        new HttpServletResponseSetter());
             }
         }
         filterChain.doFilter(servletRequest, servletResponse);

@@ -6,6 +6,8 @@ package ru.beeline.documentservice.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +19,13 @@ import ru.beeline.documentservice.dto.DocumentImportDTO;
 import ru.beeline.documentservice.dto.DocumentVersionDTO;
 import ru.beeline.documentservice.service.DocumentService;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static ru.beeline.documentservice.utils.Constants.CONTENT_DISPOSITION;
-import static ru.beeline.documentservice.utils.Constants.USER_ID_HEADER;
-import static ru.beeline.documentservice.utils.Constants.USER_ROLES_HEADER;
+import static ru.beeline.documentservice.utils.Constants.*;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "Documents", description = "Операции с документами и их версиями")
 public class DocumentController {
 
     @Autowired
@@ -115,9 +115,9 @@ public class DocumentController {
 
     @DeleteMapping("/documents")
     @Operation(summary = "Удаление устаревших документов")
-    public ResponseEntity<Void> deleteDocuments (){
+    public ResponseEntity<Void> deleteDocuments() {
         documentService.deleteDocuments();
-        return new  ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
 
