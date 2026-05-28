@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import static ru.beeline.documentservice.utils.Constants.USER_ID_HEADER;
 
 @RestController
 @RequestMapping("/api/v2")
+@Tag(name = "Документы (API v2)", description = "Загрузка документов бинарным телом запроса")
 public class DocumentV2Controller {
 
     @Autowired

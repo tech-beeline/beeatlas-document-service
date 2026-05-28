@@ -31,7 +31,7 @@ import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 import ru.beeline.documentservice.repository.DocumentationTypeRepository;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.net.URLDecoder;
@@ -254,7 +254,6 @@ public class DocumentService {
         if (decodedFileName.isBlank()) {
             throw new ValidationException("Пустой fileName");
         }
-
         String extension = extractExtensionOrThrow(decodedFileName, "fileName");
 
         DocumentationType documentationType = null;

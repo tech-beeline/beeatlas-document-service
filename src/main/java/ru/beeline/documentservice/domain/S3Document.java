@@ -6,7 +6,7 @@ package ru.beeline.documentservice.domain;
 
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Data
