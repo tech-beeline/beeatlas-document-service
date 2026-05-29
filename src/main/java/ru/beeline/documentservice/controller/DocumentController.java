@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,7 +55,7 @@ public class DocumentController {
         return documentService.getDocumentsExport(userId);
     }
 
-    @PostMapping("/import/{entityType}")
+    @PostMapping(path = "/import/{entityType}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Загрузка файла и старт процесса (Camunda)")
     public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestPart("file") MultipartFile file,
                                                               @RequestParam(value = "sync", required = false) boolean sync,
@@ -65,7 +66,7 @@ public class DocumentController {
                 sync, userId, entityType, request));
     }
 
-    @PostMapping("/documents/{path_name}/{doc_type}")
+    @PostMapping(path = "/documents/{path_name}/{doc_type}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Загрузка документа в S3 и сохранение метаданных")
     public ResponseEntity<DocIdDTO> uploadExcelFile(@Parameter(description = "File to upload", required = true) @RequestPart("file") MultipartFile file,
                                                     @RequestParam(value = "isPublic", required = false) boolean isPublic,
@@ -97,7 +98,7 @@ public class DocumentController {
         return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId, userRoles);
     }
 
-    @PatchMapping("/export/{doc_id}")
+    @PatchMapping(path = "/export/{doc_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Дозагрузка (reload) документа по docId")
     public ResponseEntity patchCapabilityMap(@PathVariable(name = "doc_id") Integer docId,
                                              @RequestPart("file") MultipartFile file,
