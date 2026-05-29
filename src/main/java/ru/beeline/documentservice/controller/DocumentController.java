@@ -35,12 +35,9 @@ public class DocumentController {
     @GetMapping("/documents/{id}")
     @Operation(summary = "Получение документа по id")
     public ResponseEntity<byte[]> getDocument(@PathVariable Integer id,
-                                              @Parameter(description = "Роли пользователя (например, содержит ADMINISTRATOR)", required = false)
-                                              @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles,
                                               @Parameter(description = "Идентификатор пользователя", required = false)
                                               @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId) {
-        return documentService.getDocument(id, userRoles, userId);
-
+        return documentService.getDocument(id, userId);
     }
 
     @GetMapping("/documents/import")
@@ -93,9 +90,8 @@ public class DocumentController {
     @Operation(summary = "Получение последней версии документа по типу и targetId")
     public ResponseEntity<byte[]> getDocumentByTypeAndTarget(@PathVariable Integer documentationTypeId,
                                                              @PathVariable Integer targetId,
-                                                             @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId,
-                                                             @RequestHeader(value = USER_ROLES_HEADER, required = false) String userRoles) {
-        return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId, userRoles);
+                                                             @RequestHeader(value = USER_ID_HEADER, required = false) Integer userId) {
+        return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId);
     }
 
     @PatchMapping(path = "/export/{doc_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
