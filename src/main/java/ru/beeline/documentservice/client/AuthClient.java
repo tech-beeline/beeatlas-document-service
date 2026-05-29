@@ -17,7 +17,7 @@ public class AuthClient {
     private final RestTemplate restTemplate;
     private final String authServerUrl;
 
-    public AuthClient(RestTemplate restTemplate, @Value("${integration.fdm-auth-server-url}") String authServerUrl) {
+    public AuthClient(RestTemplate restTemplate, @Value("${integration.auth-server-url}") String authServerUrl) {
         this.restTemplate = restTemplate;
         this.authServerUrl = authServerUrl;
     }
