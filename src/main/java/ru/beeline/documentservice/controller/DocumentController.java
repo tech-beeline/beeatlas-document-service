@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.beeline.documentservice.annotation.ApiErrorCodes;
 import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.dto.DocumentExportDTO;
 import ru.beeline.documentservice.dto.DocumentImportDTO;
@@ -32,6 +33,7 @@ public class DocumentController {
     @Autowired
     private DocumentService documentService;
 
+    @ApiErrorCodes({400, 500})
     @GetMapping("/documents/{id}")
     @Operation(summary = "Получение документа по id")
     public ResponseEntity<byte[]> getDocument(@PathVariable Integer id,
@@ -40,18 +42,21 @@ public class DocumentController {
         return documentService.getDocument(id, userId);
     }
 
+    @ApiErrorCodes({400, 500})
     @GetMapping("/documents/import")
     @Operation(summary = "Список импортированных документов (для администратора)")
     public List<DocumentImportDTO> getDocumentsImport(@RequestHeader(value = USER_ID_HEADER) Integer userId) {
         return documentService.getDocumentsImport(userId);
     }
 
+    @ApiErrorCodes({400, 500})
     @GetMapping("/documents/export")
     @Operation(summary = "Список экспортированных документов")
     public List<DocumentExportDTO> getDocumentsExport(@RequestHeader(value = USER_ID_HEADER) Integer userId) {
         return documentService.getDocumentsExport(userId);
     }
 
+    @ApiErrorCodes({400, 404, 500})
     @PostMapping(path = "/import/{entityType}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Загрузка файла и старт процесса (Camunda)")
     public ResponseEntity<DocIdDTO> uploadFileAndStartProcess(@RequestPart("file") MultipartFile file,
@@ -63,6 +68,7 @@ public class DocumentController {
                 sync, userId, entityType, request));
     }
 
+    @ApiErrorCodes({400, 404, 500})
     @PostMapping(path = "/documents/{path_name}/{doc_type}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Загрузка документа в S3 и сохранение метаданных")
     public ResponseEntity<DocIdDTO> uploadExcelFile(@Parameter(description = "File to upload", required = true) @RequestPart("file") MultipartFile file,
@@ -77,6 +83,7 @@ public class DocumentController {
                 docType, userId, contentDisposition, targetId, ttl));
     }
 
+    @ApiErrorCodes({400, 500})
     @GetMapping("/documents/versions/{documentationsTypeId}/{targetId}")
     @Operation(summary = "Список версий документа по типу документации и targetId")
     public List<DocumentVersionDTO> getDocumentVersions(
@@ -85,7 +92,7 @@ public class DocumentController {
         return documentService.getDocumentVersions(documentationTypeId, targetId);
     }
 
-
+    @ApiErrorCodes({400, 500})
     @GetMapping("/documents/{documentationTypeId}/{targetId}")
     @Operation(summary = "Получение последней версии документа по типу и targetId")
     public ResponseEntity<byte[]> getDocumentByTypeAndTarget(@PathVariable Integer documentationTypeId,
@@ -94,6 +101,7 @@ public class DocumentController {
         return documentService.getDocumentByTypeAndTarget(documentationTypeId, targetId, userId);
     }
 
+    @ApiErrorCodes({400, 404, 500})
     @PatchMapping(path = "/export/{doc_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Дозагрузка (reload) документа по docId")
     public ResponseEntity patchCapabilityMap(@PathVariable(name = "doc_id") Integer docId,
@@ -103,6 +111,7 @@ public class DocumentController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @ApiErrorCodes({400, 404, 500})
     @PostMapping("/export/{entity_type}")
     @Operation(summary = "Асинхронная выгрузка документа")
     public ResponseEntity<DocIdDTO> postAsynchronousDocumentLoading(@PathVariable(name = "entity_type") String entityType,
@@ -110,6 +119,7 @@ public class DocumentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.asynchronousDocumentLoading(entityType, userId));
     }
 
+    @ApiErrorCodes({500})
     @DeleteMapping("/documents")
     @Operation(summary = "Удаление устаревших документов")
     public ResponseEntity<Void> deleteDocuments() {
