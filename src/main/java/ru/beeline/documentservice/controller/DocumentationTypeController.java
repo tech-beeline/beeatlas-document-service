@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.beeline.documentservice.annotation.ApiErrorCodes;
 import ru.beeline.documentservice.dto.DocumentationTypeDTO;
 import ru.beeline.documentservice.service.DocumentationTypeService;
 
@@ -24,6 +25,7 @@ public class DocumentationTypeController {
     @Autowired
     private DocumentationTypeService documentationTypeService;
 
+    @ApiErrorCodes({400, 500})
     @GetMapping("/{entity-type}")
     @Operation(summary = "Получение типа документации по типу сущности")
     public List<DocumentationTypeDTO> getDocumentationTypeByEntityType(@PathVariable(name = "entity-type") String entityType) {
