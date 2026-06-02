@@ -14,5 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class UserInfoDto {
+    private Integer id;
+    private List<Long> productsIds;
     private List<String> roles;
+    private List<String> permissions;
 }
