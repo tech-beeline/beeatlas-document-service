@@ -18,4 +18,5 @@ public class UserInfoDto {
     private List<Long> productsIds;
     private List<String> roles;
     private List<String> permissions;
+    private List<String> permissionNames;
 }
