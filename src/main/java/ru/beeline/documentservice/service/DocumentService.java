@@ -7,6 +7,7 @@ package ru.beeline.documentservice.service;
 import io.minio.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.beeline.documentservice.client.AuthClient;
 import ru.beeline.documentservice.client.CamundaClient;
 import ru.beeline.documentservice.client.PackageClient;
-import ru.beeline.documentservice.controller.RequestContext;
 import ru.beeline.documentservice.domain.DocumentationType;
 import ru.beeline.documentservice.domain.S3Document;
 import ru.beeline.documentservice.dto.*;
@@ -31,24 +32,24 @@ import ru.beeline.documentservice.mapper.DocumentImportMapper;
 import ru.beeline.documentservice.repository.DocumentRepository;
 import ru.beeline.documentservice.repository.DocumentationTypeRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.net.URLConnection;
 
 @Slf4j
 @Service
 public class DocumentService {
+
+    @Autowired
+    private AuthClient authClient;
 
     @Autowired
     private CamundaClient camundaClient;
@@ -74,7 +75,7 @@ public class DocumentService {
     @Value("${aws.s3.bucket.name}")
     private String bucketName;
 
-    public ResponseEntity<byte[]> getDocument(Integer id, String userRoles, Integer userId) {
+    public ResponseEntity<byte[]> getDocument(Integer id, Integer userId) {
         Optional<S3Document> optionalS3Document = documentRepository.findById(id);
         if (optionalS3Document.isEmpty()) {
             throw new NotFoundException("404: Запись с данным id не найдена");
@@ -82,8 +83,13 @@ public class DocumentService {
         S3Document document = optionalS3Document.get();
         String key = document.getKey();
         byte[] result;
-        if (document.getIsPublic() || (userRoles != null && userRoles.contains("ADMINISTRATOR")) || (document.getSourceType()
-                .equals("user") && document.getSourceId().equals(userId))) {
+        boolean isAdmin = false;
+        if (userId != null) {
+            UserInfoDto userInfo = authClient.getUserInfo(userId);
+            isAdmin = userInfo != null && userInfo.getRoles() != null && userInfo.getRoles().contains("ADMINISTRATOR");
+        }
+        if (document.getIsPublic() || isAdmin || ("user".equals(document.getSourceType()) && document.getSourceId()
+                .equals(userId))) {
             result = downloadDocumentFromS3(key);
         } else {
             throw new ForbiddenException("Доступ запрещен");
@@ -119,9 +125,6 @@ public class DocumentService {
         String contentDisposition = request.getHeader("Content-Disposition");
         if (contentDisposition == null) {
             throw new ValidationException("Отсутствует заголовок Content-Disposition");
-        }
-        if (!RequestContext.getRoles().contains("ADMINISTRATOR")) {
-            throw new ForbiddenException("403 Forbidden.");
         }
     }
 
@@ -421,9 +424,6 @@ public class DocumentService {
     }
 
     public List<DocumentImportDTO> getDocumentsImport(Integer userId) {
-        if (!RequestContext.getRoles().contains("ADMINISTRATOR")) {
-            throw new ForbiddenException("403 Forbidden.");
-        }
         List<S3Document> s3Documents = documentRepository.findBySourceTypeAndSourceIdAndOperationTypeAndDeletedDateIsNull(
                 "USER",
                 userId,
@@ -431,7 +431,7 @@ public class DocumentService {
         if (s3Documents.isEmpty()) {
             return new ArrayList<>();
         }
-        List<PackageV2DTO> packageV2DTOS = packageClient.getPackagesList();
+        List<PackageV2DTO> packageV2DTOS = packageClient.getPackagesList(userId);
         List<DocumentImportDTO> result = s3Documents.stream().flatMap(s3Document -> {
             Optional<PackageV2DTO> matchingPackage = packageV2DTOS.stream()
                     .filter(packagev2 -> s3Document.getId().equals(packagev2.getSourceId()))
@@ -469,9 +469,7 @@ public class DocumentService {
 
 
     public ResponseEntity<byte[]> getDocumentByTypeAndTarget(Integer documentationTypeId,
-                                                             Integer targetId,
-                                                             Integer userId,
-                                                             String userRoles) {
+                                                             Integer targetId, Integer userId) {
         S3Document document = documentRepository.findTopByDocumentationTypeIdAndTargetEntityIdOrderByCreatedDateDesc(
                 documentationTypeId,
                 targetId).orElseThrow(() -> new NotFoundException("404: Документ не найден"));
@@ -479,7 +477,11 @@ public class DocumentService {
         String key = document.getKey();
 
         boolean isPublic = Boolean.TRUE.equals(document.getIsPublic());
-        boolean isAdmin = userRoles != null && userRoles.contains("ADMINISTRATOR");
+        boolean isAdmin = false;
+        if (userId != null) {
+            UserInfoDto userInfo = authClient.getUserInfo(userId);
+            isAdmin = userInfo != null && userInfo.getRoles() != null && userInfo.getRoles().contains("ADMINISTRATOR");
+        }
         boolean isOwner = "USER".equals(document.getSourceType()) && userId != null && userId.equals(document.getSourceId());
 
         if (!isPublic && !isAdmin && !isOwner) {

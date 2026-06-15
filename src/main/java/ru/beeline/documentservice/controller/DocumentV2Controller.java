@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.beeline.documentservice.annotation.ApiErrorCodes;
 import ru.beeline.documentservice.dto.DocIdDTO;
 import ru.beeline.documentservice.exception.ValidationException;
 import ru.beeline.documentservice.service.DocumentService;
@@ -27,6 +28,7 @@ public class DocumentV2Controller {
     @Autowired
     private DocumentService documentService;
 
+    @ApiErrorCodes({400, 404, 500})
     @PostMapping(value = "/documents/{path_name}/{doc_type}", consumes = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.ALL_VALUE})
     @Operation(summary = "Загрузка документа (raw binary body)")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "Validation error"), @ApiResponse(responseCode = "403", description = "Forbidden"), @ApiResponse(responseCode = "404", description = "Not found"), @ApiResponse(responseCode = "503", description = "S3 error")})
